@@ -1,3 +1,3 @@
-# LethalCompanyPluginTemplate
+# LethalCommands
 
-This is a work in progress.
+This is an early work in progress. My first BepInEx plugin.

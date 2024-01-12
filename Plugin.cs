@@ -3,31 +3,25 @@ using BepInEx.Logging;
 using GameNetcodeStuff;
 using HarmonyLib;
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using System.Linq;
-using System.Numerics;
 using System.Text.RegularExpressions;
-using Unity.Netcode;
 using UnityEngine;
-using static UnityEngine.UIElements.UIR.Implementation.UIRStylePainter;
-/* PLUGIN BY BOB SAGET -  INSPIRED BY GAMEMASTER*/
-namespace LethalCompanyPluginTemplate
+
+/* PLUGIN BY BOB SAGET -  INSPIRED BY GAMEMASTER - VERY EARLY WORK IN PROGRESS */
+namespace LethalCommands
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
         public static ManualLogSource logger;
-        /// <summary>
-        /// Current Game Instance
-        /// </summary>
-        internal static Plugin Instance;
+        #region Game Fields
         internal static bool isHost;
         internal static PlayerControllerB hostPlayerRef;
         internal static PlayerControllerB myPlayerRef;
         private static SelectableLevel currentLevel;
-
-
+        #endregion
+        #region Command Fields
+        internal static bool noclip = false;
         internal static bool godMode = false;
         internal static bool demiGod = false;
         internal static bool invisibility = false;
@@ -43,7 +37,7 @@ namespace LethalCompanyPluginTemplate
         internal static float nightVisionIntensity = 1000f;
         internal static float nightVisionRange = 10000f;
         internal static Color nightVisionColor = Color.green;
-
+        #endregion
         private void Awake()
         {
             // TODO: Figure out why patch classes aren't working...? Why does everything have to be in this file...
@@ -71,9 +65,11 @@ namespace LethalCompanyPluginTemplate
 
         [HarmonyPatch(typeof(PlayerControllerB), nameof(PlayerControllerB.Update))]
         [HarmonyPrefix]
+        // I'd refactor this - this runs way too frequently, and is really easy to cause performance/stability issues here
+        // Try to move individial command/toggle logic to patch logic? IDK man this just doesn't sit right
         static void MovementCheats(ref PlayerControllerB __instance)
         {
-            // Need to rework - can assign a player as a host variable, but need 'currently playing player' as well
+            // Need to find a reliable way to find the host player without checking every Update - Start isn't reliable either
             if (__instance?.isHostPlayerObject ?? false)
             {
                 hostPlayerRef = __instance;
@@ -109,6 +105,7 @@ namespace LethalCompanyPluginTemplate
             {
                 Mathf.Clamp(__instance.sprintMeter += 0.02f, 0f, 1f);
             }
+            //if (noclip)
         }
 
         [HarmonyPatch(typeof(PlayerControllerB), "Jump_performed")]
@@ -162,35 +159,12 @@ namespace LethalCompanyPluginTemplate
         {
             currentLevel = ___currentLevel;
         }
-        // TODO: private method - figure this out
-        //[HarmonyPatch(typeof(PlayerControllerB), "GetVisibility")]
-        //[HarmonyPostfix]
-        //static float Invisibility(ref PlayerControllerB __instance)
-        //{
-
-        //    if (__instance.isPlayerDead || invisibility)
-        //    {
-        //        return 0f;
-        //    }
-
-        //    float num = 1f;
-        //    if (__instance.isCrouching)
-        //    {
-        //        num -= 0.25f;
-        //    }
-
-        //    if (__instance.timeSincePlayerMoving > 0.5f)
-        //    {
-        //        num -= 0.16f;
-        //    }
-
-        //    return num;
-        //}
 
         [HarmonyPatch(typeof(HUDManager), "SubmitChat_performed")]
         [HarmonyPrefix]
         static void TextChatCommands(HUDManager __instance)
         {
+            // TODO: REFACTOR THIS SPAGHETTIIIIIII
             // Define a regular expression pattern to match the number
             string numberExpression = @"\d+";
             string text = __instance.chatTextField.text;
@@ -254,6 +228,13 @@ namespace LethalCompanyPluginTemplate
                     alertTitle = "God Mode";
                     alertBody = "God Mode set to: " + godMode.ToString();
                 }
+                //if (text.ToLower().Contains("noclip"))
+                //{
+                //    noclip = !noclip;
+                //    alertTitle = "Noclip";
+                //    alertBody = "Noclip set to: " + noclip.ToString();
+                // I don't wanna do the math to make this work :( Quaternions this, versors that...
+                //}
                 if (text.ToLower().Contains("vision"))
                 {
                     nightVision = !nightVision;
@@ -284,71 +265,54 @@ namespace LethalCompanyPluginTemplate
                     alertTitle = "Infinite Deadline";
                     alertBody = "Infinite Deadline set to: " + infiniteDeadline.ToString();
                 }
+                //if (text.ToLower().Contains("invisib"))
+                //{
+                //    invisibility = !invisibility;
+                //    alertTitle = "Invisibility";
+                //    alertBody = "Invisibility set to : " + invisibility.ToString();
+                //}
                 // TODO: Add a submenu for SPAWNING (enemies, items, etc..)
                 if (text.ToLower().Contains("shotgun"))
                 {
-                    alertTitle = "Spawn Shotgun";
-                    alertBody = "Spawned Shotgun at player pos";
-                    foreach (var enemy in currentLevel.Enemies)
-                    {
-                        if (enemy.enemyType.enemyName.ToLower().Contains("nutcracker"))
-                        {
-                            try
-                            {
-                                logger.LogInfo("Attempting to spawn shotgun for " + hostPlayerRef.playerUsername);
-                                logger.LogInfo("Attempting to spawn nutcracker at player position: " + hostPlayerRef.transform.position.ToString());
-                                GameObject gameObject = Instantiate(enemy.enemyType.enemyPrefab, hostPlayerRef.transform.position, UnityEngine.Quaternion.Euler(UnityEngine.Vector3.zero), RoundManager.Instance.spawnedScrapContainer);
-                                NetworkObject networkObject = gameObject.GetComponent<NetworkObject>();
-                                networkObject.Spawn();
-                                logger.LogInfo("Attempted to spawn nutcracker at player position: " + hostPlayerRef.transform.position.ToString());
-                                logger.LogInfo("Actual nutcracker position: " + gameObject.transform.position);
-                                NutcrackerEnemyAI nutcracker = gameObject.GetComponent<NutcrackerEnemyAI>();
-                                GrabbableObject gun = gameObject.GetComponent<ShotgunItem>();
-                                logger.LogInfo("Attempting to force drop Shotgun");
-                                nutcracker.DropGun(hostPlayerRef.transform.position);
-                                //networkObject.Despawn();
-                                //GameObject gameObject = Instantiate(enemy.enemyType.enemyPrefab, hostPlayerRef.serverPlayerPosition, Quaternion.identity);
-                                //logger.LogInfo("Instantiated Nutcracker GameObject: " + (gameObject != null).ToString());
-                                //gameObject.GetComponentInChildren<NetworkObject>().Spawn(destroyWithScene: true);
-                                //logger.LogInfo("Spawned Nutcracker GameObject");
-                                //var nwObject = gameObject.GetComponentInChildren<NetworkObject>();
-                                //logger.LogInfo("Found Nutcracker NetworkObject: " + (nwObject != null).ToString());
-                                //var nutcracker = gameObject.GetComponentInChildren<NutcrackerEnemyAI>();
-                                //logger.LogInfo("Found NutcrackerEnemyAI: " + (nutcracker != null).ToString());
-                                //logger.LogInfo("Attempting to force drop Shotgun");
-                                //nutcracker.DropGunServerRpc(hostPlayerRef.serverPlayerPosition);
+                    //if (myPlayerRef != null || isHost)
+                    //{
+                    //    alertTitle = "Spawn Shotgun";
+                    //    alertBody = "Spawned Shotgun at " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername);
+                    //    foreach (var enemy in currentLevel.Enemies)
+                    //    {
+                    //        if (enemy.enemyType.enemyName.ToLower().Contains("nutcracker"))
+                    //        {
+                    //            try
+                    //            {
+                    //                logger.LogInfo("Attempting to spawn shotgun for " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername));
+                    //                logger.LogInfo("Attempting to spawn nutcracker at player position: " + (isHost ? hostPlayerRef.transform.position.ToString() : myPlayerRef.transform.position.ToString()));
+                    //                GameObject gameObject = Instantiate(enemy.enemyType.enemyPrefab, isHost ? hostPlayerRef.transform.position : myPlayerRef.transform.position, UnityEngine.Quaternion.Euler(UnityEngine.Vector3.zero));
+                    //                NetworkObject networkObject = gameObject.GetComponent<NetworkObject>();
+                    //                networkObject.Spawn();
+                    //                logger.LogInfo("Attempted to spawn nutcracker at player position: " + (isHost ? hostPlayerRef.transform.position.ToString() : myPlayerRef.transform.position.ToString()));
+                    //                logger.LogInfo("Actual nutcracker position: " + gameObject.transform.position);
+                    //                NutcrackerEnemyAI nutcracker = gameObject.GetComponent<NutcrackerEnemyAI>();
+                    //                GrabbableObject gun = gameObject.GetComponent<ShotgunItem>();
+                    //                logger.LogInfo("Attempting to force drop Shotgun");
+                    //                nutcracker.DropGun(hostPlayerRef.transform.position);
 
-                                //logger.LogInfo("Attempting to Spawn Nutcracker");
-                                //RoundManager.Instance.SpawnEnemyOnServer(hostPlayerRef.serverPlayerPosition, hostPlayerRef.targetYRot, currentLevel.Enemies.IndexOf(enemy));
-                                //logger.LogInfo("Attempting to find recently spawned nutcracker");
-                                //var nutcracker = FindObjectsByType<NutcrackerEnemyAI>(FindObjectsInactive.Exclude, FindObjectsSortMode.None)
-                                //    .Where(nutcracker => nutcracker.GetClosestPlayer().GetInstanceID() == hostPlayerRef.GetInstanceID())
-                                //    .FirstOrDefault();
-                                ////hostPlayerRef.GrabObjectServerRpc(gun.NetworkObject);
-                                //logger.LogInfo("Found NutcrackerEnemyAI: " + (nutcracker != null).ToString());
-                                //logger.LogInfo("Nutcracker spawned?: " + nutcracker.IsSpawned);
-                            }
-                            catch (Exception ex)
-                            {
-                                logger.LogError("Failed to spawn Nutcracker!");
-                                logger.LogError(ex);
-                            }
-                            break;
-                        }
-                    }
+                    //                //networkObject.Despawn();
+                    //            }
+                    //            catch (Exception ex)
+                    //            {
+                    //                logger.LogError("Failed to spawn Nutcracker!");
+                    //                logger.LogError(ex);
+                    //            }
+                    //            break;
+                    //        }
+                    //    }
+                    //}
                 }
                 // TODO: Add a submenu for SPAWNING (enemies, items, etc..)
                 if (text.ToLower().Contains("nutcracker"))
                 {
                     alertTitle = "Spawn Nutcracker";
-                    alertBody = "Spawned Nutcracker at player pos";
-                    //var shotgun = UnityEngine.Object.FindObjectsOfType<ShotgunItem>().FirstOrDefault();
-                    //if (shotgun != null)
-                    //{
-                    //    logger.LogInfo("Found a Shotgun to spawn");
-                    //    shotgun.GrabItemFromEnemy();
-                    //    GameObject obj = Instantiate(shotgun., hostPlayerRef.serverPlayerPosition, Quaternion.identity, RoundManager.Instance.spawnedScrapContainer);
-                    //} else logger.LogError("Failed to find a shotgun to spawn");
+                    alertBody = "Spawned Nutcracker at " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername);
 
                     foreach (var enemy in currentLevel.Enemies)
                     {
@@ -356,11 +320,11 @@ namespace LethalCompanyPluginTemplate
                         {
                             try
                             {
-                                logger.LogInfo("Attempting to spawn nutcracker at player position: " + hostPlayerRef.transform.position.ToString());
-                                GameObject gameObject = Instantiate(enemy.enemyType.enemyPrefab, hostPlayerRef.transform.position, UnityEngine.Quaternion.Euler(UnityEngine.Vector3.zero), RoundManager.Instance.spawnedScrapContainer);
-                                gameObject.GetComponent<NetworkObject>().Spawn();
-                                logger.LogInfo("Attempted to spawn nutcracker at player position: " + hostPlayerRef.transform.position.ToString());
-                                logger.LogInfo("Actual nutcracker position: " + gameObject.transform.position);
+                                logger.LogInfo("Attempting to spawn nutcracker at player position: " + (isHost ? hostPlayerRef.transform.position.ToString() : myPlayerRef.transform.position.ToString()));
+                                //GameObject gameObject = Instantiate(enemy.enemyType.enemyPrefab, hostPlayerRef.transform.position, UnityEngine.Quaternion.Euler(UnityEngine.Vector3.zero), RoundManager.Instance.spawnedScrapContainer);
+                                //gameObject.GetComponent<NetworkObject>().Spawn();
+                                RoundManager.Instance.SpawnEnemyOnServer(isHost ? hostPlayerRef.transform.position : myPlayerRef.transform.position, isHost ? hostPlayerRef.transform.rotation.y : myPlayerRef.transform.rotation.y, currentLevel.Enemies.IndexOf(enemy));
+                                logger.LogInfo("Attempted to spawn nutcracker at player position: " + (isHost ? hostPlayerRef.transform.position.ToString() : myPlayerRef.transform.position.ToString()));
                             }
                             catch (Exception ex)
                             {
@@ -371,6 +335,7 @@ namespace LethalCompanyPluginTemplate
                         }
                     }
                 }
+                // Temporary fix - there has GOT to be an easier way to find which player instance represents your player (I think MoreCompany makes this harder than normal)
                 if (text.ToLower().StartsWith("/username"))
                 {
                     string[] words = text.ToLower().Split(' ');
@@ -445,11 +410,20 @@ namespace LethalCompanyPluginTemplate
             }
         }
         [HarmonyPatch(typeof(RoundManager), "EnemyCannotBeSpawned")]
-        [HarmonyPrefix]
-        static bool OverrideCannotSpawn()
+        [HarmonyPostfix]
+        // Ignores if spawning is disabled, enemy power levels, and maxCount
+        static bool OverrideEnemySpawn()
         {
-            // ignored if not host, no need to check
+            // Should add this behind a toggle... may cause some unintended funky behavior
+            logger.LogInfo("Force Spawned Enemy -> EnemyCannotBeSpawned: false");
             return false;
+        }
+
+        [HarmonyPatch(typeof(PlayerControllerB), "SetNightVisionEnabled")]
+        [HarmonyPostfix]
+        static void enableNightVision(ref PlayerControllerB __instance)
+        {
+            __instance.nightVision.enabled = nightVision;
         }
     }
 }
