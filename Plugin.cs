@@ -1,11 +1,13 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
+using DunGen;
 using GameNetcodeStuff;
 using HarmonyLib;
 using System;
 using System.Linq;
 using System.Text.RegularExpressions;
 using UnityEngine;
+using UnityEngine.AI;
 
 /* PLUGIN BY BOB SAGET -  INSPIRED BY GAMEMASTER - VERY EARLY WORK IN PROGRESS */
 namespace LethalCommands
@@ -14,6 +16,8 @@ namespace LethalCommands
     public class Plugin : BaseUnityPlugin
     {
         public static ManualLogSource logger;
+        public static Plugin plugin;
+
         #region Game Fields
         internal static bool isHost;
         internal static PlayerControllerB hostPlayerRef;
@@ -31,6 +35,7 @@ namespace LethalCommands
         internal static bool infiniteJump = false;
         internal static bool infiniteCredits = false;
         internal static bool infiniteDeadline = false;
+        internal static bool allDoorsUnlockable = false;
         internal static bool superJump = false;
         internal static float jumpForce = (float)13.0;
         internal static float movementSpeed = (float)4.6;
@@ -43,6 +48,7 @@ namespace LethalCommands
             // TODO: Figure out why patch classes aren't working...? Why does everything have to be in this file...
             // Plugin startup logic
             logger = Logger;
+            plugin = this;
             logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
             Harmony.CreateAndPatchAll(typeof(Plugin));
         }
@@ -70,6 +76,8 @@ namespace LethalCommands
         static void MovementCheats(ref PlayerControllerB __instance)
         {
             // Need to find a reliable way to find the host player without checking every Update - Start isn't reliable either
+            // Maybe StartOfRound.localPlayerController?
+            // GameNetworkManager.Instance.localPlayerController
             if (__instance?.isHostPlayerObject ?? false)
             {
                 hostPlayerRef = __instance;
@@ -265,6 +273,39 @@ namespace LethalCommands
                     alertTitle = "Infinite Deadline";
                     alertBody = "Infinite Deadline set to: " + infiniteDeadline.ToString();
                 }
+                // nOT WORKING
+                if (text.ToLower().Contains("unlock"))
+                {
+                    alertTitle = "Doors";
+                    alertBody = "Unlocked All Doors";
+                    DoorLock[] doorLocks = FindObjectsOfType<DoorLock>();
+                    foreach (DoorLock door in doorLocks)
+                    {
+                        logger.LogInfo("Found Door (" + door.GetInstanceID() + ") Locked? -> " + door.isLocked.ToString());
+                        if (door.isLocked)
+                        {
+                            door.UnlockDoorSyncWithServer();
+                            logger.LogInfo("Unlocked Door (" + door.GetInstanceID() + ") -> " + door.isLocked.ToString());
+                        }
+                    }
+                }
+                // Not working
+                if (text.ToLower().Contains("door"))
+                {
+                    alertTitle = "Door";
+                    alertBody = "Opened All Doors";
+                    DoorLock[] doors = FindObjectsOfType<DoorLock>();
+                    foreach (DoorLock door in doors)
+                    {
+                        logger.LogInfo("Found Door (" + door.GetInstanceID() + ") Opened? -> " + door.isDoorOpened.ToString());
+                        if (!door.isDoorOpened)
+                        {
+                            //door.isDoorOpened = true;
+                            door.OpenDoorAsEnemyServerRpc();
+                            logger.LogInfo("Opened Door (" + door.GetInstanceID() + ") -> " + door.isDoorOpened.ToString());
+                        }
+                    }
+                }
                 //if (text.ToLower().Contains("invisib"))
                 //{
                 //    invisibility = !invisibility;
@@ -357,6 +398,7 @@ namespace LethalCommands
                     }
 
                 }
+                // RoundManager - line 611 has some potentially useful snippits
                 if (text.ToLower().StartsWith("/teleport"))
                 {
                     if (myPlayerRef != null || isHost)
@@ -380,6 +422,31 @@ namespace LethalCommands
                                     hostPlayerRef.TeleportPlayer(StartOfRound.Instance.playerSpawnPositions[0].transform.position, false);
                                 }
                                 else myPlayerRef.TeleportPlayer(StartOfRound.Instance.playerSpawnPositions[0].transform.position, false);
+                            }
+                            if (words[1].ToLower().Equals("inside"))
+                            {
+                                alertBody = "Teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername) + " to Indoor Entrance";
+                                logger.LogInfo("Current player position: " + (isHost ? hostPlayerRef.transform.position.ToString() : myPlayerRef.transform.position.ToString()));
+                                logger.LogInfo("Attempting to teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername) + " to position: " + plugin.GetEntrance().ToString());
+                                
+                                if (isHost)
+                                {
+                                    hostPlayerRef.TeleportPlayer(plugin.GetEntrance(), false);
+                                }
+                                else myPlayerRef.TeleportPlayer(plugin.GetEntrance(), false);
+                            }
+                            if (words[1].ToLower().Equals("outside"))
+                            {
+                                alertBody = "Teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername) + " to Indoor Entrance";
+                                logger.LogInfo("Current player position: " + (isHost ? hostPlayerRef.transform.position.ToString() : myPlayerRef.transform.position.ToString()));
+                                logger.LogInfo("Attempting to teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername) + " to position: " + plugin.GetEntrance(true).ToString());
+
+                                if (isHost)
+                                {
+                                    hostPlayerRef.TeleportPlayer(plugin.GetEntrance(true), false);
+                                }
+                                else myPlayerRef.TeleportPlayer(plugin.GetEntrance(true), false);
+
                             }
                             if (matchedPlayer != null)
                             {
@@ -410,7 +477,7 @@ namespace LethalCommands
             }
         }
         [HarmonyPatch(typeof(RoundManager), "EnemyCannotBeSpawned")]
-        [HarmonyPostfix]
+        [HarmonyPrefix]
         // Ignores if spawning is disabled, enemy power levels, and maxCount
         static bool OverrideEnemySpawn()
         {
@@ -424,6 +491,59 @@ namespace LethalCommands
         static void enableNightVision(ref PlayerControllerB __instance)
         {
             __instance.nightVision.enabled = nightVision;
+        }
+
+        //[HarmonyPatch(typeof(DoorLock), "Update")]
+        //[HarmonyPostfix]
+        //static void noKeyRequired(ref bool ___isLocked, ref InteractTrigger ___doorTrigger)
+        //{
+        //    if (___isLocked)
+        //    {
+        //        if (GameNetworkManager.Instance == null || GameNetworkManager.Instance.localPlayerController == null)
+        //        {
+        //            return;
+        //        }
+
+        //        if (StartOfRound.Instance.localPlayerUsingController)
+        //        {
+        //            ___doorTrigger.disabledHoverTip = "Use key: [R-trigger]";
+        //        }
+        //        else
+        //        {
+        //            ___doorTrigger.disabledHoverTip = "Use key: [ LMB ]";
+        //        }
+
+        //        ___doorTrigger.timeToHoldSpeedMultiplier = (float)100.0;
+
+        //    }
+        //}
+
+        Vector3 GetEntrance(bool getOutsideEntrance = false)
+        {
+            EntranceTeleport[] array = FindObjectsOfType<EntranceTeleport>(includeInactive: false);
+            for (int i = 0; i < array.Length; i++)
+            {
+                if (array[i].entranceId != 0)
+                {
+                    continue;
+                }
+
+                if (!getOutsideEntrance)
+                {
+                    if (!array[i].isEntranceToBuilding)
+                    {
+                        return array[i].entrancePoint.position;
+
+                    }
+                }
+                else if (array[i].isEntranceToBuilding)
+                {
+                    return array[i].entrancePoint.position;
+                }
+            }
+
+            Debug.LogError("Main entrance position could not be found. Returning origin.");
+            return Vector3.zero;
         }
     }
 }
