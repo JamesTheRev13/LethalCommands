@@ -11,6 +11,7 @@ using Unity.Netcode;
 using UnityEngine;
 
 /* PLUGIN BY BOB SAGET -  INSPIRED BY GAMEMASTER and DANCETOOLS - VERY EARLY WORK IN PROGRESS */
+// TODO: Very much in need of a heavy refactor - too much spaghetti - DANCETOOLS is a great example to model after
 namespace LethalCommands
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -31,6 +32,7 @@ namespace LethalCommands
         internal static bool godMode = false;
         internal static bool demiGod = false;
         internal static bool invisibility = false;
+        internal static bool infiniteAmmo = false;
         internal static bool nightVision = false;
         internal static bool speedHack = false;
         internal static bool infiniteSprint = false;
@@ -238,6 +240,12 @@ namespace LethalCommands
                     alertTitle = "God Mode";
                     alertBody = "God Mode set to: " + godMode.ToString();
                 }
+                if (text.ToLower().Contains("ammo"))
+                {
+                    infiniteAmmo = !infiniteAmmo;
+                    alertTitle = "Infinite Ammo";
+                    alertBody = "Infinite Ammo set to: " + infiniteAmmo.ToString();
+                }
                 //if (text.ToLower().Contains("noclip"))
                 //{
                 //    noclip = !noclip;
@@ -347,7 +355,7 @@ namespace LethalCommands
                         shotgunObj.GetComponent<GrabbableObject>().fallTime = 0f;
                         shotgunObj.AddComponent<ScanNodeProperties>().scrapValue = 60; 
                         shotgunObj.GetComponent<GrabbableObject>().SetScrapValue(60);
-                        shotgunObj.GetComponent<ShotgunItem>().shellsLoaded = 9999;
+                        shotgunObj.GetComponent<ShotgunItem>().shellsLoaded = 2147483647;
                         shotgunObj.GetComponent<NetworkObject>().Spawn();
                         logger.LogInfo("Attempted to spawn shotgun!");
                     }
@@ -494,6 +502,13 @@ namespace LethalCommands
         static void enableNightVision(ref PlayerControllerB __instance)
         {
             __instance.nightVision.enabled = nightVision;
+        }
+
+        [HarmonyPatch(typeof(ShotgunItem), "ShootGun")]
+        [HarmonyPostfix]
+        static void ammoOverride(ref int ___shellsLoaded)
+        {
+            ___shellsLoaded = 2147483647;
         }
 
         //[HarmonyPatch(typeof(DoorLock), "Update")]
