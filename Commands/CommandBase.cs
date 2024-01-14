@@ -9,8 +9,10 @@ public abstract class CommandBase : ICommand
     protected ManualLogSource logger;
     protected Plugin plugin;
 
-    public string CommandTitle { get; protected set; }
-    public string CommandBody { get; protected set; }
+    public string CommandTitle { get; protected set; } = string.Empty;
+    public string CommandBody { get; protected set; } = string.Empty;
+    public bool IsHostCommand { get; protected set; } = false;
+
 
     public CommandBase(Plugin plugin, ManualLogSource logger)
     {
@@ -50,8 +52,12 @@ public abstract class CommandBase : ICommand
     {
         try
         {
-            // Call the specific logic in the derived class
-            ExecuteCommand();
+            // Check if host command and host status before running
+            if (IsHostCommand && !GameNetworkManager.Instance.localPlayerController.IsHost)
+            {
+                CommandTitle = "Not Allowed";
+                CommandBody = "Must be host";
+            } else { ExecuteCommand(); }// Call the specific logic in the derived class
             DisplayCommandLog();
         }
         catch (Exception ex)
@@ -65,10 +71,13 @@ public abstract class CommandBase : ICommand
     protected virtual void DisplayCommandLog()
     {
         HUDManager.Instance.DisplayTip(CommandTitle, CommandBody);
+        HUDManager.Instance.chatTextField.text = "";
     }
 
     protected virtual void HandleExecuteError(Exception ex)
     {
+        CommandTitle = "Error";
+        CommandBody = "Unknown Command";
         logger.LogError("Unexpected error in command execution: " + GetType().Name + "\n" + ex.Message);
     }
 }

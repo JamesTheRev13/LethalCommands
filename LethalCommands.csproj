@@ -33,9 +33,4 @@
           <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Lethal Company\Lethal Company_Data\Managed\Unity.TextMeshPro.dll</HintPath>
         </Reference>
     </ItemGroup>
-
-    <ItemGroup>
-      <Folder Include="Commands\Game\" />
-      <Folder Include="Commands\Spawning\" />
-    </ItemGroup>
 </Project>

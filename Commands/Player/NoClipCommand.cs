@@ -38,9 +38,9 @@ public class NoClipCommand : CommandBase
 
     protected override void HandleExecuteError(Exception ex)
     {
+        base.HandleExecuteError(ex);
         CommandTitle = "NoClip Error";
         CommandBody = $"Error setting NoClip";
-        base.HandleExecuteError(ex);
     }
 }
 

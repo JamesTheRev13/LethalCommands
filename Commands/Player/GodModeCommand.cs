@@ -31,9 +31,9 @@ public class GodModeCommand : CommandBase
 
     protected override void HandleExecuteError(Exception ex)
     {
+        base.HandleExecuteError(ex);
         CommandTitle = "God Mode Error";
         CommandBody = "Error toggling God Mode";
-        base.HandleExecuteError(ex);
     }
 }
 
