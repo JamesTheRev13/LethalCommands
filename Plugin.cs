@@ -43,6 +43,7 @@ namespace LethalCommands
         internal static bool superJump = false;
         internal static float jumpForce = (float)13.0;
         internal static float movementSpeed = (float)4.6;
+        internal static float noclipSpeed = 0.5f;
         internal static float nightVisionIntensity = 1000f;
         internal static float nightVisionRange = 10000f;
         internal static Color nightVisionColor = Color.green;
@@ -117,7 +118,8 @@ namespace LethalCommands
             {
                 Mathf.Clamp(__instance.sprintMeter += 0.02f, 0f, 1f);
             }
-            //if (noclip)
+
+            plugin.NoClip();
         }
 
         [HarmonyPatch(typeof(PlayerControllerB), "Jump_performed")]
@@ -246,13 +248,25 @@ namespace LethalCommands
                     alertTitle = "Infinite Ammo";
                     alertBody = "Infinite Ammo set to: " + infiniteAmmo.ToString();
                 }
-                //if (text.ToLower().Contains("noclip"))
-                //{
-                //    noclip = !noclip;
-                //    alertTitle = "Noclip";
-                //    alertBody = "Noclip set to: " + noclip.ToString();
-                // I don't wanna do the math to make this work :( Quaternions this, versors that...
-                //}
+                if (text.ToLower().Contains("noclip"))
+                {
+                    if (text.ToLower().StartsWith("/set"))
+                    {
+                        Match match = Regex.Match(text, numberExpression);
+                        if (match.Success)
+                        {
+                            noclipSpeed = float.Parse(match.Value);
+
+                            alertTitle = "Noclip";
+                            alertBody = "Noclip speed set to: " + noclipSpeed.ToString();
+                        }
+                    } else
+                    {
+                        noclip = !noclip;
+                        alertTitle = "Noclip";
+                        alertBody = "Noclip set to: " + noclip.ToString();
+                    }
+                }
                 if (text.ToLower().Contains("vision"))
                 {
                     nightVision = !nightVision;
@@ -301,23 +315,23 @@ namespace LethalCommands
                     }
                 }
                 // Not working
-                if (text.ToLower().Contains("door"))
-                {
-                    alertTitle = "Door";
-                    alertBody = "Opened All Doors";
-                    Door[] doors = FindObjectsOfType<Door>();
-                    foreach (Door door in doors)
-                    {
-                        logger.LogInfo("Found Door (" + door.GetInstanceID() + ") Opened? -> " + door.IsOpen.ToString());
-                        if (!door.IsOpen)
-                        {
-                            door.isOpen = true;
-                            door.IsOpen = true;
-                            door.SetDoorState(door.IsOpen);
-                            logger.LogInfo("Opened Door (" + door.GetInstanceID() + ") -> " + door.IsOpen.ToString());
-                        }
-                    }
-                }
+                //if (text.ToLower().Contains("door"))
+                //{
+                //    alertTitle = "Door";
+                //    alertBody = "Opened All Doors";
+                //    Door[] doors = FindObjectsOfType<Door>();
+                //    foreach (Door door in doors)
+                //    {
+                //        logger.LogInfo("Found Door (" + door.GetInstanceID() + ") Opened? -> " + door.IsOpen.ToString());
+                //        if (!door.IsOpen)
+                //        {
+                //            door.isOpen = true;
+                //            door.IsOpen = true;
+                //            door.SetDoorState(door.IsOpen);
+                //            logger.LogInfo("Opened Door (" + door.GetInstanceID() + ") -> " + door.IsOpen.ToString());
+                //        }
+                //    }
+                //}
                 //if (text.ToLower().Contains("invisib"))
                 //{
                 //    invisibility = !invisibility;
@@ -355,6 +369,7 @@ namespace LethalCommands
                         shotgunObj.GetComponent<GrabbableObject>().fallTime = 0f;
                         shotgunObj.AddComponent<ScanNodeProperties>().scrapValue = 60; 
                         shotgunObj.GetComponent<GrabbableObject>().SetScrapValue(60);
+                        // setting this to the max int value allows you to drop "infinite" ammo shotguns to other players
                         shotgunObj.GetComponent<ShotgunItem>().shellsLoaded = 2147483647;
                         shotgunObj.GetComponent<NetworkObject>().Spawn();
                         logger.LogInfo("Attempted to spawn shotgun!");
@@ -562,6 +577,56 @@ namespace LethalCommands
 
             Debug.LogError("Main entrance position could not be found. Returning origin.");
             return Vector3.zero;
+        }
+        // NoClip originally by Non-Lethal-Company
+        void NoClip()
+        {
+            
+            var player = GameNetworkManager.Instance.localPlayerController;
+
+            var camera = player?.gameplayCamera.transform ?? null;
+
+            var collider = player?.GetComponent<CharacterController>() as Collider ?? null;
+            if (collider == null)
+                return;
+
+            if (noclip)
+            {
+                collider.enabled = false;
+                var dir = new Vector3();
+
+                // Horizontal
+                if (UnityInput.Current.GetKey(KeyCode.W))
+                    dir += camera.forward;
+                if (UnityInput.Current.GetKey(KeyCode.S))
+                    dir += camera.forward * -1;
+                if (UnityInput.Current.GetKey(KeyCode.D))
+                    dir += camera.right;
+                if (UnityInput.Current.GetKey(KeyCode.A))
+                    dir += camera.right * -1;
+
+                // Vertical
+                if (UnityInput.Current.GetKey(KeyCode.Space))
+                    dir.y += camera.up.y;
+                if (UnityInput.Current.GetKey(KeyCode.LeftControl))
+                    dir.y += camera.up.y * -1;
+
+                var prevPos = player.transform.localPosition;
+                if (prevPos.Equals(Vector3.zero))
+                    return;
+
+                var newPos = prevPos + dir * (noclipSpeed * Time.deltaTime);
+                player.transform.localPosition = newPos;
+            }
+            else
+            {
+                // if (!_hasDisabledCollider)
+                //     return;
+
+                collider.enabled = true;
+                // _hasDisabledCollider = false;
+
+            }
         }
     }
 }
