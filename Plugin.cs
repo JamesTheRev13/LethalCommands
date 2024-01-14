@@ -4,12 +4,13 @@ using DunGen;
 using GameNetcodeStuff;
 using HarmonyLib;
 using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Text.RegularExpressions;
+using Unity.Netcode;
 using UnityEngine;
-using UnityEngine.AI;
 
-/* PLUGIN BY BOB SAGET -  INSPIRED BY GAMEMASTER - VERY EARLY WORK IN PROGRESS */
+/* PLUGIN BY BOB SAGET -  INSPIRED BY GAMEMASTER and DANCETOOLS - VERY EARLY WORK IN PROGRESS */
 namespace LethalCommands
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
@@ -23,6 +24,7 @@ namespace LethalCommands
         internal static PlayerControllerB hostPlayerRef;
         internal static PlayerControllerB myPlayerRef;
         private static SelectableLevel currentLevel;
+        //internal static AllItemsList allItemsList;
         #endregion
         #region Command Fields
         internal static bool noclip = false;
@@ -278,14 +280,15 @@ namespace LethalCommands
                 {
                     alertTitle = "Doors";
                     alertBody = "Unlocked All Doors";
-                    DoorLock[] doorLocks = FindObjectsOfType<DoorLock>();
+                    List<DoorLock> doorLocks = FindObjectsOfType<DoorLock>().ToList();
+
                     foreach (DoorLock door in doorLocks)
                     {
                         logger.LogInfo("Found Door (" + door.GetInstanceID() + ") Locked? -> " + door.isLocked.ToString());
                         if (door.isLocked)
                         {
                             door.UnlockDoorSyncWithServer();
-                            logger.LogInfo("Unlocked Door (" + door.GetInstanceID() + ") -> " + door.isLocked.ToString());
+                            logger.LogInfo("Unlocked Door (" + door?.GetInstanceID() + ") -> " + door?.isLocked.ToString());
                         }
                     }
                 }
@@ -294,15 +297,16 @@ namespace LethalCommands
                 {
                     alertTitle = "Door";
                     alertBody = "Opened All Doors";
-                    DoorLock[] doors = FindObjectsOfType<DoorLock>();
-                    foreach (DoorLock door in doors)
+                    Door[] doors = FindObjectsOfType<Door>();
+                    foreach (Door door in doors)
                     {
-                        logger.LogInfo("Found Door (" + door.GetInstanceID() + ") Opened? -> " + door.isDoorOpened.ToString());
-                        if (!door.isDoorOpened)
+                        logger.LogInfo("Found Door (" + door.GetInstanceID() + ") Opened? -> " + door.IsOpen.ToString());
+                        if (!door.IsOpen)
                         {
-                            //door.isDoorOpened = true;
-                            door.OpenDoorAsEnemyServerRpc();
-                            logger.LogInfo("Opened Door (" + door.GetInstanceID() + ") -> " + door.isDoorOpened.ToString());
+                            door.isOpen = true;
+                            door.IsOpen = true;
+                            door.SetDoorState(door.IsOpen);
+                            logger.LogInfo("Opened Door (" + door.GetInstanceID() + ") -> " + door.IsOpen.ToString());
                         }
                     }
                 }
@@ -315,39 +319,38 @@ namespace LethalCommands
                 // TODO: Add a submenu for SPAWNING (enemies, items, etc..)
                 if (text.ToLower().Contains("shotgun"))
                 {
-                    //if (myPlayerRef != null || isHost)
-                    //{
-                    //    alertTitle = "Spawn Shotgun";
-                    //    alertBody = "Spawned Shotgun at " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername);
-                    //    foreach (var enemy in currentLevel.Enemies)
-                    //    {
-                    //        if (enemy.enemyType.enemyName.ToLower().Contains("nutcracker"))
-                    //        {
-                    //            try
-                    //            {
-                    //                logger.LogInfo("Attempting to spawn shotgun for " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername));
-                    //                logger.LogInfo("Attempting to spawn nutcracker at player position: " + (isHost ? hostPlayerRef.transform.position.ToString() : myPlayerRef.transform.position.ToString()));
-                    //                GameObject gameObject = Instantiate(enemy.enemyType.enemyPrefab, isHost ? hostPlayerRef.transform.position : myPlayerRef.transform.position, UnityEngine.Quaternion.Euler(UnityEngine.Vector3.zero));
-                    //                NetworkObject networkObject = gameObject.GetComponent<NetworkObject>();
-                    //                networkObject.Spawn();
-                    //                logger.LogInfo("Attempted to spawn nutcracker at player position: " + (isHost ? hostPlayerRef.transform.position.ToString() : myPlayerRef.transform.position.ToString()));
-                    //                logger.LogInfo("Actual nutcracker position: " + gameObject.transform.position);
-                    //                NutcrackerEnemyAI nutcracker = gameObject.GetComponent<NutcrackerEnemyAI>();
-                    //                GrabbableObject gun = gameObject.GetComponent<ShotgunItem>();
-                    //                logger.LogInfo("Attempting to force drop Shotgun");
-                    //                nutcracker.DropGun(hostPlayerRef.transform.position);
+                    if (myPlayerRef != null || isHost)
+                    {
+                        alertTitle = "Spawn Shotgun";
+                        alertBody = "Spawned Shotgun at " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername);
 
-                    //                //networkObject.Despawn();
-                    //            }
-                    //            catch (Exception ex)
-                    //            {
-                    //                logger.LogError("Failed to spawn Nutcracker!");
-                    //                logger.LogError(ex);
-                    //            }
-                    //            break;
-                    //        }
-                    //    }
-                    //}
+                        AllItemsList allItemsList = StartOfRound.Instance.allItemsList;
+                        allItemsList.itemsList
+                            .ForEach(item =>
+                            {
+                                logger.LogInfo("Item Name: " + item.itemName);
+                                logger.LogInfo("Item ID: " + item.itemId);
+                            }
+                        );
+                        // Item ID is 17 (same with Ammo)
+                        Item shotgunItem = allItemsList.itemsList.Find(item => item.itemName.ToLower().Contains("shotgun"));
+
+                        logger.LogInfo("Found Shotgun: " + shotgunItem.itemId);
+
+                        Vector3 spawnPosition = GameNetworkManager.Instance.localPlayerController.transform.position;
+                        if (GameNetworkManager.Instance.localPlayerController.isPlayerDead)
+                        {
+                            spawnPosition = GameNetworkManager.Instance.localPlayerController.spectatedPlayerScript.transform.position;
+                        }
+
+                        GameObject shotgunObj = Instantiate(shotgunItem.spawnPrefab, spawnPosition, Quaternion.identity);
+                        shotgunObj.GetComponent<GrabbableObject>().fallTime = 0f;
+                        shotgunObj.AddComponent<ScanNodeProperties>().scrapValue = 60; 
+                        shotgunObj.GetComponent<GrabbableObject>().SetScrapValue(60);
+                        shotgunObj.GetComponent<ShotgunItem>().shellsLoaded = 9999;
+                        shotgunObj.GetComponent<NetworkObject>().Spawn();
+                        logger.LogInfo("Attempted to spawn shotgun!");
+                    }
                 }
                 // TODO: Add a submenu for SPAWNING (enemies, items, etc..)
                 if (text.ToLower().Contains("nutcracker"))
@@ -437,7 +440,7 @@ namespace LethalCommands
                             }
                             if (words[1].ToLower().Equals("outside"))
                             {
-                                alertBody = "Teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername) + " to Indoor Entrance";
+                                alertBody = "Teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername) + " to Outdoor Entrance";
                                 logger.LogInfo("Current player position: " + (isHost ? hostPlayerRef.transform.position.ToString() : myPlayerRef.transform.position.ToString()));
                                 logger.LogInfo("Attempting to teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername) + " to position: " + plugin.GetEntrance(true).ToString());
 
