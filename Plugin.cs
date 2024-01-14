@@ -1,110 +1,93 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
-using DunGen;
 using GameNetcodeStuff;
 using HarmonyLib;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text.RegularExpressions;
-using Unity.Netcode;
+using LethalCommands.Commands;
 using UnityEngine;
 
-/* PLUGIN BY BOB SAGET -  INSPIRED BY GAMEMASTER and DANCETOOLS - VERY EARLY WORK IN PROGRESS */
-// TODO: Very much in need of a heavy refactor - too much spaghetti - DANCETOOLS is a great example to model after
+/* PLUGIN BY BOB SAGET -  INSPIRED BY GAMEMASTER and DANCETOOLS (thank you for the inspiration to use the Command Pattern) - VERY EARLY WORK IN PROGRESS */
 namespace LethalCommands
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
     public class Plugin : BaseUnityPlugin
     {
-        public static ManualLogSource logger;
+        public ManualLogSource logger;
         public static Plugin plugin;
+        // Command Pattern - https://refactoring.guru/design-patterns/command
+        public CommandFactory commandFactory;
 
         #region Game Fields
-        internal static bool isHost;
-        internal static PlayerControllerB hostPlayerRef;
-        internal static PlayerControllerB myPlayerRef;
-        private static SelectableLevel currentLevel;
-        //internal static AllItemsList allItemsList;
+        private SelectableLevel currentLevel;
+        //public AllItemsList allItemsList;
         #endregion
         #region Command Fields
-        internal static bool noclip = false;
-        internal static bool godMode = false;
-        internal static bool demiGod = false;
-        internal static bool invisibility = false;
-        internal static bool infiniteAmmo = false;
-        internal static bool nightVision = false;
-        internal static bool speedHack = false;
-        internal static bool infiniteSprint = false;
-        internal static bool infiniteJump = false;
-        internal static bool infiniteCredits = false;
-        internal static bool infiniteDeadline = false;
-        internal static bool allDoorsUnlockable = false;
-        internal static bool superJump = false;
-        internal static float jumpForce = (float)13.0;
-        internal static float movementSpeed = (float)4.6;
-        internal static float noclipSpeed = 0.5f;
-        internal static float nightVisionIntensity = 1000f;
-        internal static float nightVisionRange = 10000f;
-        internal static Color nightVisionColor = Color.green;
+        public bool noclip = false;
+        public bool godMode = false;
+        //public bool demiGod = false;
+        //public bool invisibility = false;
+        public bool infiniteAmmo = false;
+        public bool nightVision = false;
+        public bool speedHack = false;
+        public bool infiniteSprint = false;
+        public bool infiniteJump = false;
+        public bool infiniteCredits = false;
+        public bool infiniteDeadline = false;
+        public bool superJump = false;
+        public float jumpForce = (float)13.0;
+        public float movementSpeed = (float)4.6;
+        public float noclipSpeed = 0.5f;
+        public float nightVisionIntensity = 1000f;
+        public float nightVisionRange = 10000f;
+        public Color nightVisionColor = Color.green;
         #endregion
         private void Awake()
         {
-            // TODO: Figure out why patch classes aren't working...? Why does everything have to be in this file...
             // Plugin startup logic
             logger = Logger;
             plugin = this;
+            // Create an instance of CommandFactory to help us churn out some Commands!
+            commandFactory = new CommandFactory(plugin, logger);
             logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
             Harmony.CreateAndPatchAll(typeof(Plugin));
         }
 
-        [HarmonyPatch(typeof(RoundManager), "Start")]
+        [HarmonyPatch(typeof(HUDManager), "SubmitChat_performed")]
         [HarmonyPrefix]
-        static void setIsHost()
+        static void TextChatCommands(HUDManager __instance)
         {
-            isHost = RoundManager.Instance.NetworkManager.IsHost;
-            logger.LogInfo("Host Status: " + isHost);
+            // TODO: add a command history, and allow UP/DOWN key navigation of command history
+            string text = __instance.chatTextField.text;
+            ICommand command = plugin.commandFactory.CreateCommand(text);
+            if (command != null && text.StartsWith('/'))
+            {
+                command.SetParameters(text);
+                command.Execute();
+            }
         }
-
-        //[HarmonyPatch(typeof(PlayerControllerB), "Start")]
-        //[HarmonyPostfix]
-        //static void sethostPlayerRef(ref PlayerControllerB __instance)
-        //{
-        //    hostPlayerRef = __instance;
-        //    logger.LogInfo("Current Player: " + hostPlayerRef.playerUsername);
-        //}
 
         [HarmonyPatch(typeof(PlayerControllerB), nameof(PlayerControllerB.Update))]
         [HarmonyPrefix]
-        // I'd refactor this - this runs way too frequently, and is really easy to cause performance/stability issues here
+        // I'd refactor this - this runs way too frequently (every frame?), and is really easy to cause performance/stability issues here
         // Try to move individial command/toggle logic to patch logic? IDK man this just doesn't sit right
-        static void MovementCheats(ref PlayerControllerB __instance)
+        static void toggleCheck(ref PlayerControllerB __instance)
         {
-            // Need to find a reliable way to find the host player without checking every Update - Start isn't reliable either
-            // Maybe StartOfRound.localPlayerController?
-            // GameNetworkManager.Instance.localPlayerController
-            if (__instance?.isHostPlayerObject ?? false)
+            // Move to switch statement for performance...?
+            if (plugin.speedHack)
             {
-                hostPlayerRef = __instance;
-                //logger.LogInfo("Found Host Player: " + hostPlayerRef.playerUsername);
-            }
-            if (speedHack)
-            {
-                __instance.movementSpeed = (float)movementSpeed;
+                __instance.movementSpeed = (float)plugin.movementSpeed;
             }
             else __instance.movementSpeed = (float)4.6;
-            if (superJump)
+            if (plugin.superJump)
             {
-                __instance.jumpForce = (float)jumpForce;
+                __instance.jumpForce = (float)plugin.jumpForce;
             }
             else __instance.jumpForce = (float)13.0;
-            // TODO: Add postfix that ignores indoors/outdoors rule for night vision
-            if (nightVision && __instance.nightVision)
+            if (plugin.nightVision && __instance.nightVision)
             {
                 __instance.nightVision.enabled = true;
-                __instance.nightVision.color = nightVisionColor;
-                __instance.nightVision.intensity = nightVisionIntensity;
-                __instance.nightVision.range = nightVisionRange;
+                __instance.nightVision.color = plugin.nightVisionColor;
+                __instance.nightVision.intensity = plugin.nightVisionIntensity;
+                __instance.nightVision.range = plugin.nightVisionRange;
             }
             else
             {
@@ -114,7 +97,7 @@ namespace LethalCommands
                 __instance.nightVision.range = 0f;
             }
             
-            if (infiniteSprint)
+            if (plugin.infiniteSprint)
             {
                 Mathf.Clamp(__instance.sprintMeter += 0.02f, 0f, 1f);
             }
@@ -127,7 +110,7 @@ namespace LethalCommands
         static void InfiniteJump(ref PlayerControllerB __instance)
         {
 
-            if (infiniteJump && !__instance.quickMenuManager.isMenuOpen && ((__instance.IsOwner && __instance.isPlayerControlled && (!__instance.IsServer || __instance.isHostPlayerObject)) || __instance.isTestingPlayer) && !__instance.inSpecialInteractAnimation && !__instance.isTypingChat && (__instance.isMovementHindered <= 0 || __instance.isUnderwater) && (!__instance.isPlayerSliding || __instance.playerSlidingTimer > 2.5f) && !__instance.isCrouching)
+            if (plugin.infiniteJump && !__instance.quickMenuManager.isMenuOpen && ((__instance.IsOwner && __instance.isPlayerControlled && (!__instance.IsServer || __instance.isHostPlayerObject)) || __instance.isTestingPlayer) && !__instance.inSpecialInteractAnimation && !__instance.isTypingChat && (__instance.isMovementHindered <= 0 || __instance.isUnderwater) && (!__instance.isPlayerSliding || __instance.playerSlidingTimer > 2.5f) && !__instance.isCrouching)
             {
                 __instance.playerSlidingTimer = 0f;
                 __instance.isJumping = true;
@@ -146,400 +129,41 @@ namespace LethalCommands
         [HarmonyPrefix]
         static bool OverrideDeath()
         {
-            StartOfRound.Instance.allowLocalPlayerDeath = !godMode;
-            
-            return !godMode;
+            StartOfRound.Instance.allowLocalPlayerDeath = !plugin.godMode;
+            plugin.logger.LogInfo("OverrideDeath: " + plugin.godMode.ToString());
+            return !plugin.godMode;
         }
 
         [HarmonyPatch(typeof(Terminal), nameof(Terminal.RunTerminalEvents))]
         [HarmonyPostfix]
         static void InfiniteCredits(ref int ___groupCredits)
         {
-            if (!isHost) { return; }
-            if (infiniteCredits) { ___groupCredits = 69420; }
+            //if (!GameNetworkManager.Instance.localPlayerController.IsHost) { return; }
+            if (plugin.infiniteCredits) { ___groupCredits = 69420; }
         }
 
         [HarmonyPatch(typeof(TimeOfDay), nameof(TimeOfDay.MoveGlobalTime))]
         [HarmonyPostfix]
         static void InfiniteDeadline(ref float ___timeUntilDeadline)
         {
-            if (!isHost) { return; }
-            if (infiniteDeadline) { ___timeUntilDeadline = 5000; }
+            //if (!GameNetworkManager.Instance.localPlayerController.IsHost) { return; }
+            if (plugin.infiniteDeadline) { ___timeUntilDeadline = 5000; }
 
         }
         [HarmonyPatch(typeof(RoundManager), "AdvanceHourAndSpawnNewBatchOfEnemies")]
         [HarmonyPrefix]
         static void updateCurrentLevelInfo(ref SelectableLevel ___currentLevel)
         {
-            currentLevel = ___currentLevel;
+            plugin.currentLevel = ___currentLevel;
         }
 
-        [HarmonyPatch(typeof(HUDManager), "SubmitChat_performed")]
-        [HarmonyPrefix]
-        static void TextChatCommands(HUDManager __instance)
-        {
-            // TODO: REFACTOR THIS SPAGHETTIIIIIII
-            // Define a regular expression pattern to match the number
-            string numberExpression = @"\d+";
-            string text = __instance.chatTextField.text;
-            if (text.StartsWith('/'))
-            {
-                string alertTitle = "Error:";
-                string alertBody = "Unknown Command";
-                // Host Only Commands
-                if (isHost)
-                {
-                    
-                }
-
-                if (text.ToLower().Contains("speed"))
-                {
-                    if (text.ToLower().StartsWith("/set"))
-                    {
-                        Match match = Regex.Match(text, numberExpression);
-                        if (match.Success)
-                        {
-                            float speedVal = float.Parse(match.Value);
-                            movementSpeed = speedVal;
-
-                            alertTitle = "Movement Speed";
-                            alertBody = "Movement Speed set to: " + movementSpeed.ToString();
-                        }
-                    } else
-                    {
-                        speedHack = !speedHack;
-                        alertTitle = "Speed Hack";
-                        alertBody = "Speed Hack set to: " + speedHack.ToString();
-                    }
-
-                }
-                if (text.ToLower().Contains("jump"))
-                {
-                    if (text.ToLower().StartsWith("/set"))
-                    {
-                        Match match = Regex.Match(text, numberExpression);
-                        if (match.Success)
-                        {
-                            float jumpForceVal = float.Parse(match.Value);
-                            jumpForce = jumpForceVal;
-
-                            alertTitle = "Jump Force";
-                            alertBody = "Jump Force set to: " + jumpForce.ToString();
-                        }
-                    }
-                    else
-                    {
-                        superJump = !superJump;
-                        alertTitle = "Super Jump";
-                        alertBody = "Super Jump set to: " + superJump.ToString();
-                    }
-
-                }
-
-                if (text.ToLower().Contains("god"))
-                {
-                    godMode = !godMode;
-                    alertTitle = "God Mode";
-                    alertBody = "God Mode set to: " + godMode.ToString();
-                }
-                if (text.ToLower().Contains("ammo"))
-                {
-                    infiniteAmmo = !infiniteAmmo;
-                    alertTitle = "Infinite Ammo";
-                    alertBody = "Infinite Ammo set to: " + infiniteAmmo.ToString();
-                }
-                if (text.ToLower().Contains("noclip"))
-                {
-                    if (text.ToLower().StartsWith("/set"))
-                    {
-                        Match match = Regex.Match(text, numberExpression);
-                        if (match.Success)
-                        {
-                            noclipSpeed = float.Parse(match.Value);
-
-                            alertTitle = "Noclip";
-                            alertBody = "Noclip speed set to: " + noclipSpeed.ToString();
-                        }
-                    } else
-                    {
-                        noclip = !noclip;
-                        alertTitle = "Noclip";
-                        alertBody = "Noclip set to: " + noclip.ToString();
-                    }
-                }
-                if (text.ToLower().Contains("vision"))
-                {
-                    nightVision = !nightVision;
-                    alertTitle = "Night Vision";
-                    alertBody = "Night Vision set to: " + nightVision.ToString();
-                }
-                if (text.ToLower().Contains("sprint"))
-                {
-                    infiniteSprint = !infiniteSprint;
-                    alertTitle = "Infinite Sprint";
-                    alertBody = "Infinite Sprint set to: " + infiniteSprint.ToString();
-                }
-                if (text.ToLower().StartsWith("/jumps"))
-                {
-                    infiniteJump = !infiniteJump;
-                    alertTitle = "Infinite Jump";
-                    alertBody = "Infinite Jump set to: " + infiniteJump.ToString();
-                }
-                if (text.ToLower().Contains("credits"))
-                {
-                    infiniteCredits = !infiniteCredits;
-                    alertTitle = "Infinite Credits";
-                    alertBody = "Infinite Credits set to: " + infiniteCredits.ToString();
-                }
-                if (text.ToLower().Contains("deadline"))
-                {
-                    infiniteDeadline = !infiniteDeadline;
-                    alertTitle = "Infinite Deadline";
-                    alertBody = "Infinite Deadline set to: " + infiniteDeadline.ToString();
-                }
-                if (text.ToLower().Contains("unlock"))
-                {
-                    alertTitle = "Doors";
-                    alertBody = "Unlocked All Doors";
-                    List<DoorLock> doorLocks = FindObjectsOfType<DoorLock>().ToList();
-
-                    foreach (DoorLock door in doorLocks)
-                    {
-                        logger.LogInfo("Found Door (" + door.GetInstanceID() + ") Locked? -> " + door.isLocked.ToString());
-                        if (door.isLocked)
-                        {
-                            door.UnlockDoorSyncWithServer();
-                            logger.LogInfo("Unlocked Door (" + door?.GetInstanceID() + ") -> " + door?.isLocked.ToString());
-                        }
-                    }
-                }
-                // Not working
-                //if (text.ToLower().Contains("door"))
-                //{
-                //    alertTitle = "Door";
-                //    alertBody = "Opened All Doors";
-                //    Door[] doors = FindObjectsOfType<Door>();
-                //    foreach (Door door in doors)
-                //    {
-                //        logger.LogInfo("Found Door (" + door.GetInstanceID() + ") Opened? -> " + door.IsOpen.ToString());
-                //        if (!door.IsOpen)
-                //        {
-                //            door.isOpen = true;
-                //            door.IsOpen = true;
-                //            door.SetDoorState(door.IsOpen);
-                //            logger.LogInfo("Opened Door (" + door.GetInstanceID() + ") -> " + door.IsOpen.ToString());
-                //        }
-                //    }
-                //}
-                //if (text.ToLower().Contains("invisib"))
-                //{
-                //    invisibility = !invisibility;
-                //    alertTitle = "Invisibility";
-                //    alertBody = "Invisibility set to : " + invisibility.ToString();
-                //}
-                // TODO: Add a submenu for SPAWNING (enemies, items, etc..)
-                if (text.ToLower().StartsWith("/item"))
-                {
-                    if (myPlayerRef != null || isHost)
-                    {
-                        string[] words = text.ToLower().Split(' ');
-                        // can spawn using /item <name>  OR  /item <name> <count>
-                        // maybe add another arg for position? to spawn items on other players?
-                        if (words.Length == 2 || words.Length == 3)
-                        {
-                            alertTitle = "Spawn Item";
-                            AllItemsList allItemsList = StartOfRound.Instance.allItemsList;
-                            allItemsList.itemsList
-                                .ForEach(item =>
-                                {
-                                    logger.LogInfo("Item Name: " + item.itemName);
-                                    logger.LogInfo("Item ID: " + item.itemId);
-                                }
-                            );
-                            Item item = allItemsList?.itemsList.Find(item => item.itemName.ToLower().Contains(words[1].Trim().ToLower())) ?? null;
-
-                            logger.LogInfo("Found Item: " + item?.itemName);
-
-                            if (item != null)
-                            {
-                                Vector3 spawnPosition = GameNetworkManager.Instance.localPlayerController.transform.position;
-                                if (GameNetworkManager.Instance.localPlayerController.isPlayerDead)
-                                {
-                                    spawnPosition = GameNetworkManager.Instance.localPlayerController.spectatedPlayerScript.transform.position;
-                                }
-                                
-                                int count = 1;
-
-                                if (words.Length == 3)
-                                {
-                                    try
-                                    {
-                                        var countInput = int.Parse(words[2]);
-                                        if (countInput > 0)
-                                        {
-                                            count = countInput;
-                                        }
-                                    } catch 
-                                    {
-                                        count = 0;
-                                        alertBody = "Invalid Item Count";
-                                    }
-                                }
-                                for (int i = 0; i < count; i++)
-                                {
-                                    GameObject itemObj = Instantiate(item.spawnPrefab, spawnPosition, Quaternion.identity);
-                                    itemObj.GetComponent<GrabbableObject>().fallTime = 0f;
-                                    int scrapValue = UnityEngine.Random.Range(60, 200);
-                                    itemObj.AddComponent<ScanNodeProperties>().scrapValue = scrapValue;
-                                    // setting a random scrap value for now, maybe make this configurable?
-                                    itemObj.GetComponent<GrabbableObject>().SetScrapValue(scrapValue);
-                                    if (text.Contains("shotgun") && infiniteAmmo)
-                                        itemObj.GetComponent<ShotgunItem>().shellsLoaded = 2147483647;
-                                    itemObj.GetComponent<NetworkObject>().Spawn();
-                                    logger.LogInfo("Attempted to spawn item!");
-                                    alertBody = "Spawned " + item.itemName + " at " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername);
-                                }
-                            } else
-                            {
-                                alertBody = "Invalid Item: " + words[1];
-                            }
-                        }
-                    }
-                }
-                // TODO: Add a submenu for SPAWNING (enemies, items, etc..)
-                if (text.ToLower().Contains("nutcracker"))
-                {
-                    alertTitle = "Spawn Nutcracker";
-                    alertBody = "Spawned Nutcracker at " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername);
-
-                    foreach (var enemy in currentLevel.Enemies)
-                    {
-                        if (enemy.enemyType.enemyName.ToLower().Contains("nutcracker"))
-                        {
-                            try
-                            {
-                                logger.LogInfo("Attempting to spawn nutcracker at player position: " + (isHost ? hostPlayerRef.transform.position.ToString() : myPlayerRef.transform.position.ToString()));
-                                //GameObject gameObject = Instantiate(enemy.enemyType.enemyPrefab, hostPlayerRef.transform.position, UnityEngine.Quaternion.Euler(UnityEngine.Vector3.zero), RoundManager.Instance.spawnedScrapContainer);
-                                //gameObject.GetComponent<NetworkObject>().Spawn();
-                                RoundManager.Instance.SpawnEnemyOnServer(isHost ? hostPlayerRef.transform.position : myPlayerRef.transform.position, isHost ? hostPlayerRef.transform.rotation.y : myPlayerRef.transform.rotation.y, currentLevel.Enemies.IndexOf(enemy));
-                                logger.LogInfo("Attempted to spawn nutcracker at player position: " + (isHost ? hostPlayerRef.transform.position.ToString() : myPlayerRef.transform.position.ToString()));
-                            }
-                            catch (Exception ex)
-                            {
-                                logger.LogError("Failed to spawn Nutcracker!");
-                                logger.LogError(ex);
-                            }
-                            break;
-                        }
-                    }
-                }
-                // Temporary fix - there has GOT to be an easier way to find which player instance represents your player (I think MoreCompany makes this harder than normal)
-                if (text.ToLower().StartsWith("/username"))
-                {
-                    string[] words = text.ToLower().Split(' ');
-                    if (words.Length == 2)
-                    {
-                        var players = StartOfRound.Instance.allPlayerScripts.ToList();
-                        myPlayerRef = players.Find(player => player.playerUsername.ToLower().Contains(words[1].ToLower())) ?? null;
-                        if (myPlayerRef != null)
-                        {
-                            alertTitle = "Assign Player Username";
-                            alertBody = "Assigned Current Player to " + myPlayerRef.playerUsername;
-                            logger.LogInfo("Matched Player: " + myPlayerRef.playerUsername);
-                        } else
-                        {
-                            alertTitle = "Error: Assign Player Username";
-                            alertBody = "Invalid Username: " + words[1];
-                            logger.LogInfo("Invalid Username provided: " + words[1]);
-                        }
-                    }
-
-                }
-                // RoundManager - line 611 has some potentially useful snippits
-                if (text.ToLower().StartsWith("/teleport"))
-                {
-                    if (myPlayerRef != null || isHost)
-                    {
-                        alertTitle = "Teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername);
-                        string[] words = text.ToLower().Split(' ');
-
-                        if (words.Length == 2)
-                        {
-                            var players = StartOfRound.Instance.allPlayerScripts.ToList();
-                            var matchedPlayer = players.Find(player => player.playerUsername.ToLower().Contains(words[1].ToLower())) ?? null;
-                            //var playerIndex = players.IndexOf(matchedPlayer);
-
-                            if (words[1].ToLower().Equals("ship"))
-                            {
-                                alertBody = "Teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername) + " to Ship";
-                                logger.LogInfo("Current player position: " + (isHost ? hostPlayerRef.transform.position.ToString() : myPlayerRef.transform.position.ToString()));
-                                logger.LogInfo("Attempting to teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername) + " to position: " + StartOfRound.Instance.playerSpawnPositions[0].transform.position.ToString());
-                                if (isHost)
-                                {
-                                    hostPlayerRef.TeleportPlayer(StartOfRound.Instance.playerSpawnPositions[0].transform.position, false);
-                                }
-                                else myPlayerRef.TeleportPlayer(StartOfRound.Instance.playerSpawnPositions[0].transform.position, false);
-                            }
-                            if (words[1].ToLower().Equals("inside"))
-                            {
-                                alertBody = "Teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername) + " to Indoor Entrance";
-                                logger.LogInfo("Current player position: " + (isHost ? hostPlayerRef.transform.position.ToString() : myPlayerRef.transform.position.ToString()));
-                                logger.LogInfo("Attempting to teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername) + " to position: " + plugin.GetEntrance().ToString());
-                                
-                                if (isHost)
-                                {
-                                    hostPlayerRef.TeleportPlayer(plugin.GetEntrance(), false);
-                                }
-                                else myPlayerRef.TeleportPlayer(plugin.GetEntrance(), false);
-                            }
-                            if (words[1].ToLower().Equals("outside"))
-                            {
-                                alertBody = "Teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername) + " to Outdoor Entrance";
-                                logger.LogInfo("Current player position: " + (isHost ? hostPlayerRef.transform.position.ToString() : myPlayerRef.transform.position.ToString()));
-                                logger.LogInfo("Attempting to teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername) + " to position: " + plugin.GetEntrance(true).ToString());
-
-                                if (isHost)
-                                {
-                                    hostPlayerRef.TeleportPlayer(plugin.GetEntrance(true), false);
-                                }
-                                else myPlayerRef.TeleportPlayer(plugin.GetEntrance(true), false);
-
-                            }
-                            if (matchedPlayer != null)
-                            {
-
-                                alertBody = "Teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername) + " to " + matchedPlayer.playerUsername;
-                                logger.LogInfo("Current player position: " + (isHost ? hostPlayerRef.transform.position.ToString() : myPlayerRef.transform.position.ToString()));
-                                logger.LogInfo("Attempting to teleport " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername) + " to " + matchedPlayer.playerUsername + " at position: " + matchedPlayer.transform.position.ToString());
-
-                                if (isHost)
-                                {
-                                    hostPlayerRef.TeleportPlayer(matchedPlayer.transform.position, false);
-                                }
-                                else myPlayerRef.TeleportPlayer(matchedPlayer.transform.position, false);
-                            }
-                        }
-                    } else
-                    {
-                        alertTitle = "Error: No Player Assigned";
-                        alertBody = "Use /username yourusernamehere";
-                    }
-                    
-                }
-                // sends notice to user about what they have done
-                HUDManager.Instance.DisplayTip(alertTitle, alertBody);
-                // Hide the message from chat
-                __instance.chatTextField.text = "";
-                return;
-            }
-        }
         [HarmonyPatch(typeof(RoundManager), "EnemyCannotBeSpawned")]
         [HarmonyPrefix]
         // Ignores if spawning is disabled, enemy power levels, and maxCount
         static bool OverrideEnemySpawn()
         {
             // Should add this behind a toggle... may cause some unintended funky behavior
-            logger.LogInfo("Force Spawned Enemy -> EnemyCannotBeSpawned: false");
+            plugin.logger.LogInfo("Force Spawned Enemy -> EnemyCannotBeSpawned: false");
             return false;
         }
 
@@ -547,43 +171,18 @@ namespace LethalCommands
         [HarmonyPostfix]
         static void enableNightVision(ref PlayerControllerB __instance)
         {
-            __instance.nightVision.enabled = nightVision;
+            __instance.nightVision.enabled = plugin.nightVision;
         }
 
         [HarmonyPatch(typeof(ShotgunItem), "ShootGun")]
         [HarmonyPostfix]
         static void ammoOverride(ref int ___shellsLoaded)
         {
-            if (infiniteAmmo)
+            if (plugin.infiniteAmmo)
                 ___shellsLoaded = 2147483647;
         }
 
-        //[HarmonyPatch(typeof(DoorLock), "Update")]
-        //[HarmonyPostfix]
-        //static void noKeyRequired(ref bool ___isLocked, ref InteractTrigger ___doorTrigger)
-        //{
-        //    if (___isLocked)
-        //    {
-        //        if (GameNetworkManager.Instance == null || GameNetworkManager.Instance.localPlayerController == null)
-        //        {
-        //            return;
-        //        }
-
-        //        if (StartOfRound.Instance.localPlayerUsingController)
-        //        {
-        //            ___doorTrigger.disabledHoverTip = "Use key: [R-trigger]";
-        //        }
-        //        else
-        //        {
-        //            ___doorTrigger.disabledHoverTip = "Use key: [ LMB ]";
-        //        }
-
-        //        ___doorTrigger.timeToHoldSpeedMultiplier = (float)100.0;
-
-        //    }
-        //}
-
-        Vector3 GetEntrance(bool getOutsideEntrance = false)
+        public Vector3 GetEntrance(bool getOutsideEntrance = false)
         {
             EntranceTeleport[] array = FindObjectsOfType<EntranceTeleport>(includeInactive: false);
             for (int i = 0; i < array.Length; i++)
@@ -613,13 +212,12 @@ namespace LethalCommands
         // NoClip originally by Non-Lethal-Company
         void NoClip()
         {
-            
             var player = GameNetworkManager.Instance.localPlayerController;
 
             var camera = player?.gameplayCamera.transform ?? null;
 
             var collider = player?.GetComponent<CharacterController>() as Collider ?? null;
-            if (collider == null)
+            if (collider == null || player.isTypingChat)
                 return;
 
             if (noclip)
@@ -652,11 +250,7 @@ namespace LethalCommands
             }
             else
             {
-                // if (!_hasDisabledCollider)
-                //     return;
-
                 collider.enabled = true;
-                // _hasDisabledCollider = false;
 
             }
         }
