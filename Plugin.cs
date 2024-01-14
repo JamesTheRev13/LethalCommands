@@ -297,7 +297,6 @@ namespace LethalCommands
                     alertTitle = "Infinite Deadline";
                     alertBody = "Infinite Deadline set to: " + infiniteDeadline.ToString();
                 }
-                // nOT WORKING
                 if (text.ToLower().Contains("unlock"))
                 {
                     alertTitle = "Doors";
@@ -339,40 +338,72 @@ namespace LethalCommands
                 //    alertBody = "Invisibility set to : " + invisibility.ToString();
                 //}
                 // TODO: Add a submenu for SPAWNING (enemies, items, etc..)
-                if (text.ToLower().Contains("shotgun"))
+                if (text.ToLower().StartsWith("/item"))
                 {
                     if (myPlayerRef != null || isHost)
                     {
-                        alertTitle = "Spawn Shotgun";
-                        alertBody = "Spawned Shotgun at " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername);
-
-                        AllItemsList allItemsList = StartOfRound.Instance.allItemsList;
-                        allItemsList.itemsList
-                            .ForEach(item =>
-                            {
-                                logger.LogInfo("Item Name: " + item.itemName);
-                                logger.LogInfo("Item ID: " + item.itemId);
-                            }
-                        );
-                        // Item ID is 17 (same with Ammo)
-                        Item shotgunItem = allItemsList.itemsList.Find(item => item.itemName.ToLower().Contains("shotgun"));
-
-                        logger.LogInfo("Found Shotgun: " + shotgunItem.itemId);
-
-                        Vector3 spawnPosition = GameNetworkManager.Instance.localPlayerController.transform.position;
-                        if (GameNetworkManager.Instance.localPlayerController.isPlayerDead)
+                        string[] words = text.ToLower().Split(' ');
+                        // can spawn using /item <name>  OR  /item <name> <count>
+                        // maybe add another arg for position? to spawn items on other players?
+                        if (words.Length == 2 || words.Length == 3)
                         {
-                            spawnPosition = GameNetworkManager.Instance.localPlayerController.spectatedPlayerScript.transform.position;
-                        }
+                            alertTitle = "Spawn Item";
+                            AllItemsList allItemsList = StartOfRound.Instance.allItemsList;
+                            allItemsList.itemsList
+                                .ForEach(item =>
+                                {
+                                    logger.LogInfo("Item Name: " + item.itemName);
+                                    logger.LogInfo("Item ID: " + item.itemId);
+                                }
+                            );
+                            Item item = allItemsList?.itemsList.Find(item => item.itemName.ToLower().Contains(words[1].Trim().ToLower())) ?? null;
 
-                        GameObject shotgunObj = Instantiate(shotgunItem.spawnPrefab, spawnPosition, Quaternion.identity);
-                        shotgunObj.GetComponent<GrabbableObject>().fallTime = 0f;
-                        shotgunObj.AddComponent<ScanNodeProperties>().scrapValue = 60; 
-                        shotgunObj.GetComponent<GrabbableObject>().SetScrapValue(60);
-                        // setting this to the max int value allows you to drop "infinite" ammo shotguns to other players
-                        shotgunObj.GetComponent<ShotgunItem>().shellsLoaded = 2147483647;
-                        shotgunObj.GetComponent<NetworkObject>().Spawn();
-                        logger.LogInfo("Attempted to spawn shotgun!");
+                            logger.LogInfo("Found Item: " + item?.itemName);
+
+                            if (item != null)
+                            {
+                                Vector3 spawnPosition = GameNetworkManager.Instance.localPlayerController.transform.position;
+                                if (GameNetworkManager.Instance.localPlayerController.isPlayerDead)
+                                {
+                                    spawnPosition = GameNetworkManager.Instance.localPlayerController.spectatedPlayerScript.transform.position;
+                                }
+                                
+                                int count = 1;
+
+                                if (words.Length == 3)
+                                {
+                                    try
+                                    {
+                                        var countInput = int.Parse(words[2]);
+                                        if (countInput > 0)
+                                        {
+                                            count = countInput;
+                                        }
+                                    } catch 
+                                    {
+                                        count = 0;
+                                        alertBody = "Invalid Item Count";
+                                    }
+                                }
+                                for (int i = 0; i < count; i++)
+                                {
+                                    GameObject itemObj = Instantiate(item.spawnPrefab, spawnPosition, Quaternion.identity);
+                                    itemObj.GetComponent<GrabbableObject>().fallTime = 0f;
+                                    int scrapValue = UnityEngine.Random.Range(60, 200);
+                                    itemObj.AddComponent<ScanNodeProperties>().scrapValue = scrapValue;
+                                    // setting a random scrap value for now, maybe make this configurable?
+                                    itemObj.GetComponent<GrabbableObject>().SetScrapValue(scrapValue);
+                                    if (text.Contains("shotgun") && infiniteAmmo)
+                                        itemObj.GetComponent<ShotgunItem>().shellsLoaded = 2147483647;
+                                    itemObj.GetComponent<NetworkObject>().Spawn();
+                                    logger.LogInfo("Attempted to spawn item!");
+                                    alertBody = "Spawned " + item.itemName + " at " + (isHost ? hostPlayerRef.playerUsername : myPlayerRef.playerUsername);
+                                }
+                            } else
+                            {
+                                alertBody = "Invalid Item: " + words[1];
+                            }
+                        }
                     }
                 }
                 // TODO: Add a submenu for SPAWNING (enemies, items, etc..)
@@ -523,7 +554,8 @@ namespace LethalCommands
         [HarmonyPostfix]
         static void ammoOverride(ref int ___shellsLoaded)
         {
-            ___shellsLoaded = 2147483647;
+            if (infiniteAmmo)
+                ___shellsLoaded = 2147483647;
         }
 
         //[HarmonyPatch(typeof(DoorLock), "Update")]
