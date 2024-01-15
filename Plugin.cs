@@ -16,10 +16,6 @@ namespace LethalCommands
         // Command Pattern - https://refactoring.guru/design-patterns/command
         public CommandFactory commandFactory;
 
-        #region Game Fields
-        private SelectableLevel currentLevel;
-        //public AllItemsList allItemsList;
-        #endregion
         #region Command Fields
         public bool noclip = false;
         public bool godMode = false;
@@ -149,12 +145,6 @@ namespace LethalCommands
             //if (!GameNetworkManager.Instance.localPlayerController.IsHost) { return; }
             if (plugin.infiniteDeadline) { ___timeUntilDeadline = 5000; }
 
-        }
-        [HarmonyPatch(typeof(RoundManager), "AdvanceHourAndSpawnNewBatchOfEnemies")]
-        [HarmonyPrefix]
-        static void updateCurrentLevelInfo(ref SelectableLevel ___currentLevel)
-        {
-            plugin.currentLevel = ___currentLevel;
         }
 
         [HarmonyPatch(typeof(RoundManager), "EnemyCannotBeSpawned")]
