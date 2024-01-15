@@ -53,3 +53,9 @@ Examples:
 - `/teleport BobSaget` - Teleports player to position the player in the lobby with the username `BobSaget`
 - `/teleport ship` - Teleports player inside ship
 - `/teleport inside` - Teleports player at the inside entrance of the facility/dungeon
+
+## Installation (Manual)
+1. Navigate to the [Releases](https://github.com/JamesTheRev13/LethalCommands/releases) section, find the latest release, and download the `Releasevx.xx.x.zip`
+2. Open your Steam Library, right click Lethal Company, click Manage -> Browse Local Files.
+3. Open the `Releasevx.xx.x.zip` download, and drag the `BepInEx` folder into your Lethal Company folder.
+4. Don't ruin public lobbies, and have fun!
