@@ -2,42 +2,50 @@
 
 This is an early work in progress BepInEx plugin for **Lethal Company (v49)**. Functionality/commands are likely to change as the plugin evolves.
 
-Inspired by 'GameMaster' and 'Non-Lethal Company'
+Inspired by 'GameMaster', 'DanceTools', and 'Non-Lethal Company'
 
 ## Commands
-To enter a command, open the text chat (default key is `/`) and enter a command listed below:
+To enter a [command](https://refactoring.guru/design-patterns/command), open the text chat (default key is `/`) and enter a command listed below:
+
+### Player Commands
 
 `/god`: Toggles God Mode
 
 `/noclip`: Toggles NoClip (Control with `W` `A` `S` `D`, `CTRL` and `SPACE`)
 
-`/set noclip <value>`: Set the noclip speed
+`/noclip <number>`: Set NoClip 'flying' speed - Ex: `/noclip 15`
 
 `/vision`: Toggles Night Vision
 
 `/speed`: Toggles Movement Speed Modifications (Value must be set with the `/set speed <value>` command
 
-`/set speed <value>`: Set the movementSpeed value (used if `/speed` is on) - Ex: `/set speed 30`
+`/speed <value>`: Set the movementSpeed value (used if `/speed` is on) - Ex: `/set speed 30`
 
 `/sprint`: Toggle infinite sprint
 
 `/jump`: Toggle Super Jump (Value must be set with the `/set jump <value>` command
 
-`/set jump <value>`: Set the jumpForce value (used if `/jump` is toggled on) - Ex: `/set jump 40`
+`/jump <value>`: Set the jumpForce value (used if `/jump` is toggled on) - Ex: `/set jump 40`
 
 `/jumps`: Toggle infinite jumps (can jump in mid-air, you basically can double/triple/etc jump)
 
+`/ammo`: Toggle infinite ammo (Shotgun)
+
+### Game Commands
+
 `/credits`: Toggle infinite credits (freezes credits at `69420`)
 
-`/deadline`: Toggle infinite/no deadline (freezes deadline at 4 days)
+`/deadline`: **(HOST ONLY)** Toggle infinite/no deadline (freezes deadline at 4 days)
 
 `/unlock`: Unlock all doors on the map (doesn't open/unlock large/double doors yet)
 
-`/shotgun`: (HOST ONLY) Spawn a shotgun at your feet (spawns with "infinite" ammo)
+### Spawning Commands
 
-`/ammo`: Toggle infinite ammo (Shotgun)
+`/item <itemName> <?quantity>`: **(HOST ONLY)** Spawn item(s) at your feet - Ex: `/spawn mapper 4` or `/spawn jetpack`
 
-`/nutcracker`: (HOST ONLY) Spawn a Nutcracker at your position
+`/enemy <enemyName> <?quantity>`: **(HOST ONLY)** Spawn enemy(or enemies) at your position - Ex: `/enemy nutcracker 3` or `/enemy girl`
+
+### Teleporting (Self only at the moment)
 
 `/teleport <location>`: Teleport to <location> - Currently valid locations: `ship, inside, outside`, or any player username (must be in game)
 
