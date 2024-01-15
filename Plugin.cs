@@ -228,6 +228,7 @@ namespace LethalCommands
         static bool DebugTestRoomOverride()
         {
             StartOfRound.Instance.Debug_EnableTestRoomServerRpc(StartOfRound.Instance.testRoom == null);
+            plugin.logger.LogInfo($"[DEBUG MENU] Test Room: {StartOfRound.Instance.testRoom == null}");
 
             return false;
         }
@@ -237,7 +238,7 @@ namespace LethalCommands
         static bool DebugAllowDeathOverride()
         {
             StartOfRound.Instance.Debug_ToggleAllowDeathServerRpc();
-
+            plugin.logger.LogInfo($"[DEBUG MENU] God Mode: {StartOfRound.Instance.allowLocalPlayerDeath}");
             return false;
         }
 
@@ -335,9 +336,10 @@ namespace LethalCommands
         {
             if (NetworkManager.Singleton.IsConnectedClient && NetworkManager.Singleton.IsServer)
             {
-                GameObject obj = Instantiate(StartOfRound.Instance.allItemsList.itemsList[itemToSpawnId].spawnPrefab, debugEnemySpawnPositions[3].position, Quaternion.identity, StartOfRound.Instance.propsContainer);
+                GameObject obj = Instantiate(StartOfRound.Instance.allItemsList.itemsList[itemToSpawnId].spawnPrefab, GameNetworkManager.Instance.localPlayerController.transform.position, Quaternion.identity, StartOfRound.Instance.propsContainer);
                 obj.GetComponent<GrabbableObject>().fallTime = 0f;
                 obj.GetComponent<NetworkObject>().Spawn();
+                logger.LogInfo($"[DEBUG MENU] Spawned {StartOfRound.Instance.allItemsList.itemsList[itemToSpawnId].itemName} at {GameNetworkManager.Instance.localPlayerController.transform.position}");
             }
         }
 
@@ -371,6 +373,7 @@ namespace LethalCommands
                 for (int i = 0; i < numberEnemyToSpawn && i <= 50; i++)
                 {
                     RoundManager.Instance.SpawnEnemyGameObject(spawnPosition, 0f, -1, enemyType);
+                    logger.LogInfo($"[DEBUG MENU] Spawned {enemyType.enemyName} at {spawnPosition}");
                 }
             }
         }
