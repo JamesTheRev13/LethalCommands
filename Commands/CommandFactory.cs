@@ -28,11 +28,14 @@ public class CommandFactory
         RegisterCommand("/jumps", () => new InfiniteJumpCommand(plugin, logger));
         RegisterCommand("/jump", () => new SuperJumpCommand(plugin, logger));
         RegisterCommand("/teleport", () => new TeleportCommand(plugin, logger));
+        RegisterCommand("/battery", () => new InfiniteBatteryCommand(plugin, logger));
 
         // Game Commands
         RegisterCommand("/credits", () => new InfiniteCreditsCommand(plugin, logger));
         RegisterCommand("/deadline", () => new InfiniteDeadlineCommand(plugin, logger));
         RegisterCommand("/unlock", () => new UnlockAllDoorsCommand(plugin, logger));
+        //RegisterCommand("/help", () => new HelpCommand(plugin, logger));
+        //RegisterCommand("/terminal", () => new TerminalCommand(plugin, logger)); // not quite working as expected
 
         //Spawning Commands
         RegisterCommand("/item", () => new ItemSpawnCommand(plugin, logger));

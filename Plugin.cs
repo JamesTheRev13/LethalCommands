@@ -3,6 +3,7 @@ using BepInEx.Logging;
 using GameNetcodeStuff;
 using HarmonyLib;
 using LethalCommands.Commands;
+using Unity.Netcode;
 using UnityEngine;
 
 /* PLUGIN BY BOB SAGET -  INSPIRED BY GAMEMASTER, DANCETOOLS, and NON-LETHAL-COMPANY - VERY EARLY WORK IN PROGRESS */
@@ -28,6 +29,7 @@ namespace LethalCommands
         public bool infiniteJump = false;
         public bool infiniteCredits = false;
         public bool infiniteDeadline = false;
+        public bool infiniteBattery = false;
         public bool superJump = false;
         public float jumpForce = (float)13.0;
         public float movementSpeed = (float)4.6;
@@ -191,6 +193,70 @@ namespace LethalCommands
                 ___shellsLoaded = 2147483647;
         }
 
+
+        [HarmonyPatch(typeof(GrabbableObject), "Update")]
+        [HarmonyPrefix]
+        static void batteryOverride(ref Battery ___insertedBattery)
+        {
+            if (plugin.infiniteBattery)
+            {
+                ___insertedBattery.charge = 100.0f;
+                ___insertedBattery.empty = false;
+            }       
+        }
+
+        [HarmonyPatch(typeof(QuickMenuManager), "Debug_SpawnItem")]
+        [HarmonyPrefix]
+        static bool DebugSpawnItemOverride(ref int ___itemToSpawnId, ref Transform[] ___debugEnemySpawnPositions)
+        {
+            plugin.Debug_SpawnItem(___itemToSpawnId, ___debugEnemySpawnPositions);
+
+            return false;
+        }
+
+        [HarmonyPatch(typeof(QuickMenuManager), "Start")]
+        [HarmonyPrefix]
+        static void EnableDebugMenu()
+        {
+            var menuManager = FindObjectOfType<QuickMenuManager>();
+            menuManager.Debug_SetEnemyDropdownOptions();
+            menuManager.Debug_SetAllItemsDropdownOptions();
+        }
+
+        [HarmonyPatch(typeof(QuickMenuManager), "Debug_ToggleTestRoom")]
+        [HarmonyPrefix]
+        static bool DebugTestRoomOverride()
+        {
+            StartOfRound.Instance.Debug_EnableTestRoomServerRpc(StartOfRound.Instance.testRoom == null);
+
+            return false;
+        }
+
+        [HarmonyPatch(typeof(QuickMenuManager), "Debug_ToggleAllowDeath")]
+        [HarmonyPrefix]
+        static bool DebugAllowDeathOverride()
+        {
+            StartOfRound.Instance.Debug_ToggleAllowDeathServerRpc();
+
+            return false;
+        }
+
+        [HarmonyPatch(typeof(QuickMenuManager), "Debug_SpawnEnemy")]
+        [HarmonyPrefix]
+        static bool DebugSpawnEnemyOverride(ref int ___enemyTypeId, ref SelectableLevel ___testAllEnemiesLevel, ref int ___enemyToSpawnId, ref int ___numberEnemyToSpawn, ref Transform[] ___debugEnemySpawnPositions)
+        {
+            plugin.Debug_SpawnEnemy(___enemyTypeId, ___testAllEnemiesLevel, ___enemyToSpawnId, ___numberEnemyToSpawn, ___debugEnemySpawnPositions);
+
+            return false;
+        }
+
+        [HarmonyPatch(typeof(QuickMenuManager), "CanEnableDebugMenu")]
+        [HarmonyPostfix]
+        static bool DebugCanEnableDebugMenuOverride(bool canEnable, ref int ___enemyTypeId, ref SelectableLevel ___testAllEnemiesLevel, ref int ___enemyToSpawnId, ref int ___numberEnemyToSpawn, ref Transform[] ___debugEnemySpawnPositions)
+        {
+            return NetworkManager.Singleton.IsServer;
+        }
+
         public Vector3 GetEntrance(bool getOutsideEntrance = false)
         {
             EntranceTeleport[] array = FindObjectsOfType<EntranceTeleport>(includeInactive: false);
@@ -262,6 +328,50 @@ namespace LethalCommands
             {
                 collider.enabled = true;
 
+            }
+        }
+
+        public void Debug_SpawnItem(int itemToSpawnId, Transform[] debugEnemySpawnPositions)
+        {
+            if (NetworkManager.Singleton.IsConnectedClient && NetworkManager.Singleton.IsServer)
+            {
+                GameObject obj = Instantiate(StartOfRound.Instance.allItemsList.itemsList[itemToSpawnId].spawnPrefab, debugEnemySpawnPositions[3].position, Quaternion.identity, StartOfRound.Instance.propsContainer);
+                obj.GetComponent<GrabbableObject>().fallTime = 0f;
+                obj.GetComponent<NetworkObject>().Spawn();
+            }
+        }
+
+        public void Debug_SpawnEnemy(int enemyTypeId, SelectableLevel testAllEnemiesLevel, int enemyToSpawnId, int numberEnemyToSpawn, Transform[] debugEnemySpawnPositions)
+        {
+            if (!NetworkManager.Singleton.IsConnectedClient || !NetworkManager.Singleton.IsServer)
+            {
+                return;
+            }
+
+            EnemyType enemyType = null;
+            Vector3 spawnPosition = Vector3.zero;
+            switch (enemyTypeId)
+            {
+                case 0:
+                    enemyType = testAllEnemiesLevel.Enemies[enemyToSpawnId].enemyType;
+                    spawnPosition = ((!(StartOfRound.Instance.testRoom != null)) ? RoundManager.Instance.insideAINodes[UnityEngine.Random.Range(0, RoundManager.Instance.insideAINodes.Length)].transform.position : debugEnemySpawnPositions[enemyTypeId].position);
+                    break;
+                case 1:
+                    enemyType = testAllEnemiesLevel.OutsideEnemies[enemyToSpawnId].enemyType;
+                    spawnPosition = ((!(StartOfRound.Instance.testRoom != null)) ? RoundManager.Instance.outsideAINodes[UnityEngine.Random.Range(0, RoundManager.Instance.outsideAINodes.Length)].transform.position : debugEnemySpawnPositions[enemyTypeId].position);
+                    break;
+                case 2:
+                    enemyType = testAllEnemiesLevel.DaytimeEnemies[enemyToSpawnId].enemyType;
+                    spawnPosition = ((!(StartOfRound.Instance.testRoom != null)) ? RoundManager.Instance.outsideAINodes[UnityEngine.Random.Range(0, RoundManager.Instance.outsideAINodes.Length)].transform.position : debugEnemySpawnPositions[enemyTypeId].position);
+                    break;
+            }
+
+            if (!(enemyType == null))
+            {
+                for (int i = 0; i < numberEnemyToSpawn && i <= 50; i++)
+                {
+                    RoundManager.Instance.SpawnEnemyGameObject(spawnPosition, 0f, -1, enemyType);
+                }
             }
         }
     }
