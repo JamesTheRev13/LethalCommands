@@ -31,7 +31,7 @@ namespace LethalCommands
         public bool superJump = false;
         public float jumpForce = (float)13.0;
         public float movementSpeed = (float)4.6;
-        public float noclipSpeed = 0.5f;
+        public float noclipSpeed = 5.0f;
         public float nightVisionIntensity = 1000f;
         public float nightVisionRange = 10000f;
         public Color nightVisionColor = Color.green;
@@ -53,11 +53,14 @@ namespace LethalCommands
         {
             // TODO: add a command history, and allow UP/DOWN key navigation of command history
             string text = __instance.chatTextField.text;
-            ICommand command = plugin.commandFactory.CreateCommand(text);
-            if (command != null && text.StartsWith('/'))
+            if (text.StartsWith('/'))
             {
-                command.SetParameters(text);
-                command.Execute();
+                ICommand command = plugin.commandFactory.CreateCommand(text.ToLower());
+                if (command != null)
+                {
+                    command.SetParameters(text);
+                    command.Execute();
+                }
             }
         }
 
@@ -223,7 +226,8 @@ namespace LethalCommands
             var camera = player?.gameplayCamera.transform ?? null;
 
             var collider = player?.GetComponent<CharacterController>() as Collider ?? null;
-            if (collider == null || player.isTypingChat)
+            // TODO: Figure out how to also check if player is paused
+            if (collider == null || player.isTypingChat || player.inTerminalMenu)
                 return;
 
             if (noclip)

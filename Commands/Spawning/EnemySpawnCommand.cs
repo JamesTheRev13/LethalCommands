@@ -1,6 +1,9 @@
 ﻿using BepInEx.Logging;
 using System;
+using System.Linq;
+using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.UIElements;
 
 namespace LethalCommands.Commands.Player;
 // Command Pattern - https://refactoring.guru/design-patterns/command
@@ -20,8 +23,18 @@ public class EnemySpawnCommand : CommandBase
     protected override void ExecuteCommand()
     {
         CommandTitle = "Enemy Spawn";
-        SpawnableEnemyWithRarity enemy = RoundManager.Instance.currentLevel.Enemies.Find(enemy => enemy.enemyType.enemyName.ToLower().Contains(parameters[1])); ;
-        int enemyId = RoundManager.Instance.currentLevel.Enemies.IndexOf(enemy);
+        var insideEnemies = RoundManager.Instance.currentLevel.Enemies.ToList();
+        var outsideEnemies = RoundManager.Instance.currentLevel.OutsideEnemies.ToList();
+        var enemies = insideEnemies.Concat(outsideEnemies).ToList();
+
+        insideEnemies.ForEach(e => logger.LogInfo($"SpawnableEnemy - Inside: {e.enemyType.enemyName} -> ID: {insideEnemies.IndexOf(e)}"));
+        outsideEnemies.ForEach(e => logger.LogInfo($"SpawnableEnemy - Outside: {e.enemyType.enemyName} -> ID: {outsideEnemies.IndexOf(e)}"));
+
+        SpawnableEnemyWithRarity insideEnemy = insideEnemies.Find(enemy => enemy.enemyType.enemyName.ToLower().Contains(parameters[1])) ?? null;
+        SpawnableEnemyWithRarity outsideEnemy = outsideEnemies.Find(enemy => enemy.enemyType.enemyName.ToLower().Contains(parameters[1])) ?? null;
+        bool isInside = insideEnemy != null;
+        int enemyId = isInside ? insideEnemies.IndexOf(insideEnemy) : outsideEnemies.IndexOf(outsideEnemy);
+        logger.LogInfo($"Spawning SpawnableEnemy: {(isInside ? insideEnemy.enemyType.enemyName : outsideEnemy.enemyType.enemyName )}");
 
         Vector3 pos = GameNetworkManager.Instance.localPlayerController.transform.position;
         float yRot = GameNetworkManager.Instance.localPlayerController.transform.rotation.y;
@@ -32,7 +45,6 @@ public class EnemySpawnCommand : CommandBase
 
             if (parameters.Length == 3)
             {
-                CommandBody = $"Spawned {count} {enemy.enemyType.enemyName}";
                 try
                 {
                     var countInput = int.Parse(parameters[2]);
@@ -47,12 +59,19 @@ public class EnemySpawnCommand : CommandBase
                     CommandBody = "Invalid Item Count";
                 }
             }
-            plugin.logger.LogInfo($"Attempting to spawn {count} {enemy.enemyType.enemyName} at player position: {pos}");
+            plugin.logger.LogInfo($"Attempting to spawn {count} {(isInside ? insideEnemy.enemyType.enemyName : outsideEnemy.enemyType.enemyName)} at player position: {pos}");
             for (int i = 0; i < count; i++)
             {
-                RoundManager.Instance.SpawnEnemyOnServer(pos, yRot, enemyId);
-                plugin.logger.LogInfo($"Attempted to spawn {enemy.enemyType.enemyName} #{i + 1} at player position: {pos}");
+                // Outside enemies spawn differently for some reason
+                if (!isInside)
+                {
+                    GameObject obj = UnityEngine.Object.Instantiate(outsideEnemies[enemyId].enemyType.enemyPrefab, pos, Quaternion.Euler(Vector3.zero));
+                    obj.gameObject.GetComponentInChildren<NetworkObject>().Spawn(destroyWithScene: true);
+                } else RoundManager.Instance.SpawnEnemyOnServer(pos, yRot, enemyId);
+
+                plugin.logger.LogInfo($"Attempted to spawn {(isInside ? insideEnemy.enemyType.enemyName : outsideEnemy.enemyType.enemyName)} #{i + 1} at player position: {pos}");
             }
+            CommandBody = $"Spawned {count} {(isInside ? insideEnemy.enemyType.enemyName : outsideEnemy.enemyType.enemyName)}";
         }
         else CommandBody = "Invalid Enemy: " + parameters[1];
     }

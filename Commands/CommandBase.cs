@@ -79,6 +79,7 @@ public abstract class CommandBase : ICommand
         CommandTitle = "Error";
         CommandBody = "Unknown Command";
         logger.LogError("Unexpected error in command execution: " + GetType().Name + "\n" + ex.Message);
+        DisplayCommandLog();
     }
 }
 
