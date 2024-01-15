@@ -106,7 +106,7 @@ namespace LethalCommands
         static void InfiniteJump(ref PlayerControllerB __instance)
         {
 
-            if (plugin.infiniteJump && !__instance.quickMenuManager.isMenuOpen && ((__instance.IsOwner && __instance.isPlayerControlled && (!__instance.IsServer || __instance.isHostPlayerObject)) || __instance.isTestingPlayer) && !__instance.inSpecialInteractAnimation && !__instance.isTypingChat && (__instance.isMovementHindered <= 0 || __instance.isUnderwater) && (!__instance.isPlayerSliding || __instance.playerSlidingTimer > 2.5f) && !__instance.isCrouching)
+            if (plugin.infiniteJump && !plugin.noclip && !__instance.quickMenuManager.isMenuOpen && ((__instance.IsOwner && __instance.isPlayerControlled && (!__instance.IsServer || __instance.isHostPlayerObject)) || __instance.isTestingPlayer) && !__instance.inSpecialInteractAnimation && !__instance.isTypingChat && (__instance.isMovementHindered <= 0 || __instance.isUnderwater) && (!__instance.isPlayerSliding || __instance.playerSlidingTimer > 2.5f) && !__instance.isCrouching)
             {
                 __instance.playerSlidingTimer = 0f;
                 __instance.isJumping = true;
@@ -119,6 +119,22 @@ namespace LethalCommands
 
                 __instance.jumpCoroutine = __instance.StartCoroutine(__instance.PlayerJump());
             }
+        }
+        // Disallow jump if in noclip
+        [HarmonyPatch(typeof(PlayerControllerB), "Jump_performed")]
+        [HarmonyPrefix]
+        static bool NoClipNoJump(ref PlayerControllerB __instance)
+        {
+
+            return !plugin.noclip;
+        }
+        // Disallow crouch if in noclip
+        [HarmonyPatch(typeof(PlayerControllerB), "Crouch_performed")]
+        [HarmonyPrefix]
+        static bool NoClipNoCrouch(ref PlayerControllerB __instance)
+        {
+
+            return !plugin.noclip;
         }
 
         [HarmonyPatch(typeof(PlayerControllerB), "AllowPlayerDeath")]
