@@ -4,7 +4,7 @@
         <TargetFramework>netstandard2.1</TargetFramework>
         <AssemblyName>LethalCommands</AssemblyName>
         <Description>Lethal Commands - a command-based plugin for Lethal Company (V49)</Description>
-        <Version>1.49.2</Version>
+        <Version>1.49.3</Version>
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
         <LangVersion>latest</LangVersion>
     </PropertyGroup>
