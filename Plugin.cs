@@ -5,7 +5,7 @@ using HarmonyLib;
 using LethalCommands.Commands;
 using UnityEngine;
 
-/* PLUGIN BY BOB SAGET -  INSPIRED BY GAMEMASTER and DANCETOOLS (thank you for the inspiration to use the Command Pattern) - VERY EARLY WORK IN PROGRESS */
+/* PLUGIN BY BOB SAGET -  INSPIRED BY GAMEMASTER, DANCETOOLS, and NON-LETHAL-COMPANY - VERY EARLY WORK IN PROGRESS */
 namespace LethalCommands
 {
     [BepInPlugin(PluginInfo.PLUGIN_GUID, PluginInfo.PLUGIN_NAME, PluginInfo.PLUGIN_VERSION)]
