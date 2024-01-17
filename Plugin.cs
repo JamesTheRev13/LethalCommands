@@ -48,7 +48,9 @@ namespace LethalCommands
             logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
             Harmony.CreateAndPatchAll(typeof(Plugin));
         }
-
+        /* 
+         * TODO: Break out patches, this file is too long
+         */
         [HarmonyPatch(typeof(HUDManager), "SubmitChat_performed")]
         [HarmonyPrefix]
         static void TextChatCommands(HUDManager __instance)
