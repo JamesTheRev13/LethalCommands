@@ -3,6 +3,7 @@ using BepInEx.Logging;
 using GameNetcodeStuff;
 using HarmonyLib;
 using LethalCommands.Commands;
+using System.Collections;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -33,7 +34,7 @@ namespace LethalCommands
         public bool superJump = false;
         public float jumpForce = (float)13.0;
         public float movementSpeed = (float)4.6;
-        public float noclipSpeed = 5.0f;
+        public float noclipSpeed = 10.0f;
         public float nightVisionIntensity = 1000f;
         public float nightVisionRange = 10000f;
         public Color nightVisionColor = Color.green;
@@ -72,7 +73,7 @@ namespace LethalCommands
         [HarmonyPrefix]
         // I'd refactor this - this runs way too frequently (every frame?), and is really easy to cause performance/stability issues here
         // Try to move individial command/toggle logic to patch logic? IDK man this just doesn't sit right
-        static void toggleCheck(ref PlayerControllerB __instance)
+        static void ToggleCheck(ref PlayerControllerB __instance)
         {
             // Move to switch statement for performance...?
             if (plugin.speedHack)
@@ -117,14 +118,9 @@ namespace LethalCommands
             {
                 __instance.playerSlidingTimer = 0f;
                 __instance.isJumping = true;
-                //__instance.sprintMeter = Mathf.Clamp(__instance.sprintMeter - 0.08f, 0f, 1f);
                 __instance.movementAudio.PlayOneShot(StartOfRound.Instance.playerJumpSFX);
-                if (__instance.jumpCoroutine != null)
-                {
-                    __instance.StopCoroutine(__instance.jumpCoroutine);
-                }
 
-                __instance.jumpCoroutine = __instance.StartCoroutine(__instance.PlayerJump());
+                __instance.jumpCoroutine = __instance.StartCoroutine(plugin.PlayerJump(__instance));
             }
         }
         // Disallow jump if in noclip
@@ -157,7 +153,6 @@ namespace LethalCommands
         [HarmonyPostfix]
         static void InfiniteCredits(ref int ___groupCredits)
         {
-            //if (!GameNetworkManager.Instance.localPlayerController.IsHost) { return; }
             if (plugin.infiniteCredits) { ___groupCredits = 69420; }
         }
 
@@ -165,7 +160,6 @@ namespace LethalCommands
         [HarmonyPostfix]
         static void InfiniteDeadline(ref float ___timeUntilDeadline)
         {
-            //if (!GameNetworkManager.Instance.localPlayerController.IsHost) { return; }
             if (plugin.infiniteDeadline) { ___timeUntilDeadline = 5000; }
 
         }
@@ -296,7 +290,7 @@ namespace LethalCommands
 
             var collider = player?.GetComponent<CharacterController>() as Collider ?? null;
             // TODO: Figure out how to also check if player is paused
-            if (collider == null || player.isTypingChat || player.inTerminalMenu)
+            if (collider == null || player.isTypingChat || player.inTerminalMenu || player.quickMenuManager.isMenuOpen)
                 return;
 
             if (noclip)
@@ -378,6 +372,22 @@ namespace LethalCommands
                     logger.LogInfo($"[DEBUG MENU] Spawned {enemyType.enemyName} at {spawnPosition}");
                 }
             }
+        }
+
+        public IEnumerator PlayerJump(PlayerControllerB player)
+        {
+            player.playerBodyAnimator.SetBool("Jumping", value: true);
+            yield return new WaitForSeconds(0.15f);
+            player.fallValue = jumpForce;
+            player.fallValueUncapped = jumpForce;
+            yield return new WaitForSeconds(0.1f);
+            player.isJumping = false;
+            player.isFallingFromJump = true;
+            yield return new WaitUntil(() => player.thisController.isGrounded);
+            player.playerBodyAnimator.SetBool("Jumping", value: false);
+            player.isFallingFromJump = false;
+            //player.PlayerHitGroundEffects();
+            player.jumpCoroutine = null;
         }
     }
 }
