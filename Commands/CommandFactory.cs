@@ -44,6 +44,7 @@ public class CommandFactory
     public void RegisterCommand(string commandName, Func<ICommand> createCommand)
     {
         commandRegistry.Add(commandName, createCommand);
+        logger.LogInfo($"Registered Command: {commandName}");
     }
 
     public ICommand CreateCommand(string inputCommand)
