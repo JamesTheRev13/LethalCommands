@@ -23,7 +23,7 @@ public class ItemSpawnCommand : CommandBase
         // /item shotgun all
         // /item shotgun BobSaget
         // /item shotgun all 2
-        return parameters.Length == 2 || parameters.Length == 3;
+        return parameters.Length >= 2 || parameters.Length <= 4;
     }
 
     protected override void ExecuteCommand()
@@ -44,34 +44,44 @@ public class ItemSpawnCommand : CommandBase
 
         if (item != null)
         {
-            var spawnForAll = parameters[2]?.ToLower().Equals("all") ?? false;
             int count = 1;
-            if (int.TryParse(parameters[2], out int count1)) {
-                count = count1;
-            } else if (int.TryParse(parameters[3], out int count2))
+            var spawnForAll = false;
+            var matchedPlayer = GameNetworkManager.Instance.localPlayerController;
+
+            if (parameters.Length > 2)
             {
-                count = count2;
+                spawnForAll = parameters[2].ToLower().Equals("all");
+                matchedPlayer = StartOfRound.Instance.allPlayerScripts.ToList().First(player =>
+                {
+                    bool matched = player.playerUsername.Contains(parameters[2] ?? null) && int.Parse(parameters[2] ?? null) == -1;
+                    return matched ? player : GameNetworkManager.Instance.localPlayerController;
+
+                });
+                if (int.TryParse(parameters[parameters.Length - 1], out int count1))
+                {
+                    count = count1;
+                    plugin.logger.LogInfo("Parsed Count: " + count);
+                }
             }
-            var matchedPlayer = StartOfRound.Instance.allPlayerScripts.ToList().First(player => 
-            {
-                bool matched = player.playerUsername.Contains(parameters[2] ?? null) && int.Parse(parameters[2] ?? null) == -1;
-                return matched ? player : GameNetworkManager.Instance.localPlayerController;
+            plugin.logger.LogInfo("Spawn For All?: " + spawnForAll);
+            plugin.logger.LogInfo("Matched Player?: " + matchedPlayer.playerUsername ?? "FALSE");
 
-            });
             var players = spawnForAll
-                ? StartOfRound.Instance.allPlayerScripts.ToList()
+                ? StartOfRound.Instance.allPlayerScripts.ToList().FindAll(player => !player.playerUsername.Contains("Player #")) // Filter out non-existent players
                 : new List<PlayerControllerB>() { matchedPlayer };
-
+            plugin.logger.LogInfo("New Player List Length: " + players.Count);
             players.ForEach(player =>
             {
+                plugin.logger.LogInfo("Current Player iteration of Players: " + player.playerUsername);
                 Vector3 spawnPosition = player.transform.position;
-                if (GameNetworkManager.Instance.localPlayerController.isPlayerDead)
+                if (player.isPlayerDead)
                 {
                     spawnPosition = player.spectatedPlayerScript.transform.position;
                 }
 
                 for (int i = 0; i < count; i++)
                 {
+                    plugin.logger.LogInfo("Current Count iteration of Item Count: " + i);
                     GameObject itemObj = UnityEngine.Object.Instantiate(item.spawnPrefab, spawnPosition, Quaternion.identity);
                     itemObj.GetComponent<GrabbableObject>().fallTime = 0f;
                     int scrapValue = UnityEngine.Random.Range(60, 200);
