@@ -250,6 +250,20 @@ public class Plugin : BaseUnityPlugin
     {
         return NetworkManager.Singleton.IsServer;
     }
+    //[HarmonyPatch(typeof(HUDManager), "EnableChat_performed")]
+    //[HarmonyPostfix]
+    //static void EnableChatOnDeath(CallbackContext context)
+    //{
+    //    var localPlayer = GameNetworkManager.Instance.localPlayerController;
+    //    if (((CallbackContext)(ref context)).performed && !(localPlayer == null) && ((localPlayer.IsOwner && (!localPlayer.IsServer || localPlayer.isHostPlayerObject)) || localPlayer.isTestingPlayer) && !localPlayer.inTerminalMenu)
+    //    {
+    //        ShipBuildModeManager.Instance.CancelBuildMode();
+    //        localPlayer.isTypingChat = true;
+    //        ((Selectable)chatTextField).Select();
+    //        PingHUDElement(Chat, 0.1f, 1f, 1f);
+    //        ((Behaviour)(object)typingIndicator).enabled = true;
+    //    }
+    //}
 
     public Vector3 GetEntrance(bool getOutsideEntrance = false)
     {

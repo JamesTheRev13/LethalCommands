@@ -29,6 +29,7 @@ public class CommandFactory
         RegisterCommand("/jump", () => new SuperJumpCommand(plugin, logger));
         RegisterCommand("/teleport", () => new TeleportCommand(plugin, logger));
         RegisterCommand("/battery", () => new InfiniteBatteryCommand(plugin, logger));
+        RegisterCommand("/respawn", () => new RespawnCommand(plugin, logger));
 
         // Game Commands
         RegisterCommand("/credits", () => new InfiniteCreditsCommand(plugin, logger));

@@ -25,7 +25,7 @@ public class TeleportCommand : CommandBase
             .ToList()
             .Find(player => player.playerUsername.ToLower().Contains(parameters[1].ToLower())) ?? null;
 
-        CommandTitle = $"Teleport {localPlayer}";
+        CommandTitle = $"Teleport {localPlayer.playerUsername}";
         switch (parameters[1].ToLower())
         {
             case "ship":
