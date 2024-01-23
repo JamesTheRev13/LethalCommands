@@ -30,6 +30,7 @@ public class CommandFactory
         RegisterCommand("/teleport", () => new TeleportCommand(plugin, logger));
         RegisterCommand("/battery", () => new InfiniteBatteryCommand(plugin, logger));
         RegisterCommand("/respawn", () => new RespawnCommand(plugin, logger));
+        RegisterCommand("/kill", () => new KillCommand(plugin, logger));
 
         // Game Commands
         RegisterCommand("/credits", () => new InfiniteCreditsCommand(plugin, logger));

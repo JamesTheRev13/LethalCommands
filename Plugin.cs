@@ -103,6 +103,13 @@ public class Plugin : BaseUnityPlugin
             Mathf.Clamp(__instance.sprintMeter += 0.02f, 0f, 1f);
         }
 
+        if (UnityInput.Current.GetKeyUp(KeyCode.KeypadPlus) && __instance.isPlayerDead)
+        {
+            ICommand command = plugin.commandFactory.CreateCommand("/respawn");
+            command.SetParameters("/respawn");
+            command.Execute();
+        }
+
         plugin.NoClip();
     }
 
