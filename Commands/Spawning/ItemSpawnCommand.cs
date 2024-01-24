@@ -53,7 +53,7 @@ public class ItemSpawnCommand : CommandBase
                 spawnForAll = parameters[2].ToLower().Equals("all");
                 matchedPlayer = StartOfRound.Instance.allPlayerScripts.ToList().First(player =>
                 {
-                    bool matched = player.playerUsername.Contains(parameters[2] ?? null) && int.Parse(parameters[2] ?? null) == -1;
+                    bool matched = player.playerUsername.ToLower().Contains(parameters[2].ToLower()) && parameters[2].Length > 2;
                     return matched ? player : GameNetworkManager.Instance.localPlayerController;
 
                 });

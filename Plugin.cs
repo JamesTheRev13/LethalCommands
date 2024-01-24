@@ -4,6 +4,7 @@ using GameNetcodeStuff;
 using HarmonyLib;
 using LethalCommands.Commands;
 using System.Collections;
+using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -19,6 +20,8 @@ public class Plugin : BaseUnityPlugin
     public CommandFactory commandFactory;
 
     #region Command Fields
+    public List<ICommand> commandHistory = new();
+    public int currentCommandIndex = -1;
     public bool noclip = false;
     public bool godMode = false;
     //public bool demiGod = false;
@@ -65,10 +68,35 @@ public class Plugin : BaseUnityPlugin
                 command.SetParameters(text);
                 command.Execute();
                 plugin.logger.LogInfo($"Executed Command: {text}");
+                plugin.currentCommandIndex = -1;
+                plugin.commandHistory.Insert(0, command);
+                plugin.logger.LogInfo($"Added Command to Command History: {text}");
             }
         }
     }
+    [HarmonyPatch(typeof(HUDManager), "Update")]
+    [HarmonyPrefix]
+    static void CommandHistoryEvents(HUDManager __instance)
+    {
+        var localPlayer = GameNetworkManager.Instance.localPlayerController;
+        if (localPlayer.isTypingChat && plugin.commandHistory.Count > 0)
+        {
+            if (UnityInput.Current.GetKeyUp(KeyCode.UpArrow) && plugin.currentCommandIndex < plugin.commandHistory.Count - 1)
+            {
+                plugin.currentCommandIndex++;
+                var commandText = plugin.commandHistory[plugin.currentCommandIndex].GetCommand();
+                __instance.chatTextField.text = commandText;
+            }
 
+            if (UnityInput.Current.GetKeyUp(KeyCode.DownArrow) && plugin.currentCommandIndex > 0)
+            {
+                plugin.currentCommandIndex--;
+                var commandText = plugin.commandHistory[plugin.currentCommandIndex].GetCommand();
+                __instance.chatTextField.text = commandText;
+            }
+        }
+        
+    }
     [HarmonyPatch(typeof(PlayerControllerB), nameof(PlayerControllerB.Update))]
     [HarmonyPrefix]
     static void ToggleCheck(ref PlayerControllerB __instance)

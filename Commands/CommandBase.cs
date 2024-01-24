@@ -19,6 +19,7 @@ public abstract class CommandBase : ICommand
         this.logger = logger;
         this.plugin = plugin;
     }
+
     public virtual void SetParameters(string inputCommand)
     {
         try
@@ -34,6 +35,11 @@ public abstract class CommandBase : ICommand
         {
             HandleUnexpectedError(ex);
         }
+    }
+    
+    public virtual string GetCommand()
+    {
+        return string.Join("", parameters);
     }
 
     protected abstract bool ValidateParameters();
