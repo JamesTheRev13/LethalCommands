@@ -11,6 +11,8 @@ To enter a [command](https://refactoring.guru/design-patterns/command), open the
 
 `/god`: Toggles God Mode
 
+`/kill`: Kills the player
+
 `/noclip`: Toggles NoClip (Control with `W` `A` `S` `D`, `CTRL` and `SPACE`)
 
 `/noclip <number>`: Set NoClip 'flying' speed - Ex: `/noclip 15`
@@ -41,7 +43,14 @@ To enter a [command](https://refactoring.guru/design-patterns/command), open the
 
 ### Spawning Commands
 
-`/item <itemName> <?quantity>`: **(HOST ONLY)** Spawn item(s) at your feet - Ex: `/spawn mapper 4` or `/spawn jetpack`
+`/item <itemName> <?location> <?quantity>`: **(HOST ONLY)** Spawn item(s) at your (or another/all player(s)) feet
+
+Examples: 
+- `/item mapper 4`
+- `/item jetpack`
+- `/item shotgun all`
+- `/item comedy BobSaget`
+- `/item ammo all 2`
 
 `/enemy <enemyName> <?quantity>`: **(HOST ONLY)** Spawn enemy(or enemies) at your position - Ex: `/enemy nutcracker 3` or `/enemy girl`
 
