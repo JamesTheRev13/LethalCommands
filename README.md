@@ -33,6 +33,8 @@ To enter a [command](https://refactoring.guru/design-patterns/command), open the
 
 `/ammo`: Toggle infinite ammo (Shotgun)
 
+`/battery`: Toggle infinite battery (Flashlights, Jetpack, BoomBox, etc...)
+
 ### Game Commands
 
 `/credits`: Toggle infinite credits (freezes credits at `69420`)
