@@ -7,7 +7,7 @@ public class GodModeCommand : CommandBase
 {
     //bool godMode;
 
-    // Constructor passing the logger to the base class
+    
     public GodModeCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
     {
         //godMode = plugin.godMode;

@@ -6,5 +6,11 @@ public interface ICommand
     string CommandBody { get; }
 
     void SetParameters(string inputCommand);
+    /// <summary>
+    /// Gets the raw Command text with Parameters
+    /// </summary>
+    /// <returns>The full command string</returns>
+    string GetCommand();
+
     void Execute();
 }

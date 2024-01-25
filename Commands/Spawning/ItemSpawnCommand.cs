@@ -1,5 +1,8 @@
 ﻿using BepInEx.Logging;
+using GameNetcodeStuff;
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using Unity.Netcode;
 using UnityEngine;
 
@@ -7,7 +10,7 @@ namespace LethalCommands.Commands.Player;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class ItemSpawnCommand : CommandBase
 {
-    // Constructor passing the logger to the base class
+    
     public ItemSpawnCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
     {
         IsHostCommand = true;
@@ -15,7 +18,12 @@ public class ItemSpawnCommand : CommandBase
 
     protected override bool ValidateParameters()
     {
-        return parameters.Length == 2 || parameters.Length == 3;
+        // /item shotgun
+        // /item shotgun 3
+        // /item shotgun all
+        // /item shotgun BobSaget
+        // /item shotgun all 2
+        return parameters.Length >= 2 || parameters.Length <= 4;
     }
 
     protected override void ExecuteCommand()
@@ -36,44 +44,57 @@ public class ItemSpawnCommand : CommandBase
 
         if (item != null)
         {
-            Vector3 spawnPosition = GameNetworkManager.Instance.localPlayerController.transform.position;
-            if (GameNetworkManager.Instance.localPlayerController.isPlayerDead)
-            {
-                spawnPosition = GameNetworkManager.Instance.localPlayerController.spectatedPlayerScript.transform.position;
-            }
-
             int count = 1;
+            var spawnForAll = false;
+            var matchedPlayer = GameNetworkManager.Instance.localPlayerController;
 
-            if (parameters.Length == 3)
+            if (parameters.Length > 2)
             {
-                try
+                spawnForAll = parameters[2].ToLower().Equals("all");
+                matchedPlayer = StartOfRound.Instance.allPlayerScripts.ToList().First(player =>
                 {
-                    var countInput = int.Parse(parameters[2]);
-                    if (countInput > 0)
-                    {
-                        count = countInput;
-                    }
-                }
-                catch
+                    bool matched = player.playerUsername.ToLower().Contains(parameters[2].ToLower()) && parameters[2].Length > 2;
+                    return matched ? player : GameNetworkManager.Instance.localPlayerController;
+
+                });
+                if (int.TryParse(parameters[parameters.Length - 1], out int count1))
                 {
-                    count = 0;
-                    CommandBody = "Invalid Item Count";
+                    count = count1;
+                    plugin.logger.LogInfo("Parsed Count: " + count);
                 }
             }
-            for (int i = 0; i < count; i++)
+            plugin.logger.LogInfo("Spawn For All?: " + spawnForAll);
+            plugin.logger.LogInfo("Matched Player?: " + matchedPlayer.playerUsername ?? "FALSE");
+
+            var players = spawnForAll
+                ? StartOfRound.Instance.allPlayerScripts.ToList().FindAll(player => !player.playerUsername.Contains("Player #")) // Filter out non-existent players
+                : new List<PlayerControllerB>() { matchedPlayer };
+            plugin.logger.LogInfo("New Player List Length: " + players.Count);
+            players.ForEach(player =>
             {
-                GameObject itemObj = UnityEngine.Object.Instantiate(item.spawnPrefab, spawnPosition, Quaternion.identity);
-                itemObj.GetComponent<GrabbableObject>().fallTime = 0f;
-                int scrapValue = UnityEngine.Random.Range(60, 200);
-                itemObj.AddComponent<ScanNodeProperties>().scrapValue = scrapValue;
-                // setting a random scrap value for now, maybe make this configurable?
-                itemObj.GetComponent<GrabbableObject>().SetScrapValue(scrapValue);
-                if (parameters[1].ToLower().Contains("shotgun"))
-                    itemObj.GetComponent<ShotgunItem>().shellsLoaded = plugin.infiniteAmmo ? 2147483647 : 2;
-                itemObj.GetComponent<NetworkObject>().Spawn();
-                plugin.logger.LogInfo($"Attempted to spawn {parameters[1]}!");
-                CommandBody = "Spawned " + count + " " + item.itemName + " at " + GameNetworkManager.Instance.localPlayerController.playerUsername;
-            }
+                plugin.logger.LogInfo("Current Player iteration of Players: " + player.playerUsername);
+                Vector3 spawnPosition = player.transform.position;
+                if (player.isPlayerDead)
+                {
+                    spawnPosition = player.spectatedPlayerScript.transform.position;
+                }
+
+                for (int i = 0; i < count; i++)
+                {
+                    plugin.logger.LogInfo("Current Count iteration of Item Count: " + i);
+                    GameObject itemObj = UnityEngine.Object.Instantiate(item.spawnPrefab, spawnPosition, Quaternion.identity);
+                    itemObj.GetComponent<GrabbableObject>().fallTime = 0f;
+                    int scrapValue = UnityEngine.Random.Range(60, 200);
+                    itemObj.AddComponent<ScanNodeProperties>().scrapValue = scrapValue;
+                    // setting a random scrap value for now, maybe make this configurable?
+                    itemObj.GetComponent<GrabbableObject>().SetScrapValue(scrapValue);
+                    if (parameters[1].ToLower().Contains("shotgun"))
+                        itemObj.GetComponent<ShotgunItem>().shellsLoaded = plugin.infiniteAmmo ? 2147483647 : 2;
+                    itemObj.GetComponent<NetworkObject>().Spawn();
+                    plugin.logger.LogInfo($"Attempted to spawn {parameters[1]}!");
+                    CommandBody = "Spawned " + count + " " + item.itemName + " at " + player.playerUsername;
+                }
+            });
         }
         else CommandBody = "Invalid Item: " + parameters[1];
     }

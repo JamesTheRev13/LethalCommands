@@ -19,6 +19,7 @@ public abstract class CommandBase : ICommand
         this.logger = logger;
         this.plugin = plugin;
     }
+
     public virtual void SetParameters(string inputCommand)
     {
         try
@@ -34,6 +35,11 @@ public abstract class CommandBase : ICommand
         {
             HandleUnexpectedError(ex);
         }
+    }
+    
+    public virtual string GetCommand()
+    {
+        return string.Join("", parameters);
     }
 
     protected abstract bool ValidateParameters();
@@ -57,7 +63,12 @@ public abstract class CommandBase : ICommand
             {
                 CommandTitle = "Not Allowed";
                 CommandBody = "Must be host";
-            } else { ExecuteCommand(); }// Call the specific logic in the derived class
+            } else { 
+                plugin.currentCommandIndex = -1;
+                plugin.commandHistory.Insert(0, GetCommand());
+                plugin.logger.LogInfo($"Added Command to Command History: {GetCommand()}");
+                ExecuteCommand(); // Call the specific logic in the derived class
+            }
             DisplayCommandLog();
         }
         catch (Exception ex)
