@@ -6,7 +6,7 @@ namespace LethalCommands.Commands.Player;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class TeleportCommand : CommandBase
 {
-    // Constructor passing the logger to the base class
+    
     public TeleportCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
     {
 

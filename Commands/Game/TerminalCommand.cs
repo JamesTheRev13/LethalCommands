@@ -7,7 +7,7 @@ namespace LethalCommands.Commands.Game;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class TerminalCommand : CommandBase
 {
-    // Constructor passing the logger to the base class
+    
     public TerminalCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
     {
 

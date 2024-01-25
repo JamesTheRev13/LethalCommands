@@ -1,15 +1,11 @@
 ﻿using BepInEx.Logging;
-using GameNetcodeStuff;
 using System;
-using System.Linq;
-using System.Numerics;
-using UnityEngine;
 
 namespace LethalCommands.Commands.Player;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class KillCommand : CommandBase
 {
-    // Constructor passing the logger to the base class
+    
     public KillCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
     {
 

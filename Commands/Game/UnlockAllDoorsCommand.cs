@@ -7,7 +7,7 @@ namespace LethalCommands.Commands.Game;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class UnlockAllDoorsCommand : CommandBase
 {
-    // Constructor passing the logger to the base class
+    
     public UnlockAllDoorsCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
     {
 

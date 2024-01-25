@@ -3,7 +3,7 @@ using BepInEx.Logging;
 using GameNetcodeStuff;
 using HarmonyLib;
 using LethalCommands.Commands;
-using System.Collections;
+using LethalCommands.Enumerators;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
@@ -20,7 +20,7 @@ public class Plugin : BaseUnityPlugin
     public CommandFactory commandFactory;
 
     #region Command Fields
-    public List<ICommand> commandHistory = new();
+    public List<string> commandHistory = new();
     public int currentCommandIndex = -1;
     public bool noclip = false;
     public bool godMode = false;
@@ -68,12 +68,10 @@ public class Plugin : BaseUnityPlugin
                 command.SetParameters(text);
                 command.Execute();
                 plugin.logger.LogInfo($"Executed Command: {text}");
-                plugin.currentCommandIndex = -1;
-                plugin.commandHistory.Insert(0, command);
-                plugin.logger.LogInfo($"Added Command to Command History: {text}");
             }
         }
     }
+
     [HarmonyPatch(typeof(HUDManager), "Update")]
     [HarmonyPrefix]
     static void CommandHistoryEvents(HUDManager __instance)
@@ -84,18 +82,17 @@ public class Plugin : BaseUnityPlugin
             if (UnityInput.Current.GetKeyUp(KeyCode.UpArrow) && plugin.currentCommandIndex < plugin.commandHistory.Count - 1)
             {
                 plugin.currentCommandIndex++;
-                var commandText = plugin.commandHistory[plugin.currentCommandIndex].GetCommand();
+                string commandText = plugin.commandHistory[plugin.currentCommandIndex];
                 __instance.chatTextField.text = commandText;
             }
 
             if (UnityInput.Current.GetKeyUp(KeyCode.DownArrow) && plugin.currentCommandIndex > 0)
             {
                 plugin.currentCommandIndex--;
-                var commandText = plugin.commandHistory[plugin.currentCommandIndex].GetCommand();
+                string commandText = plugin.commandHistory[plugin.currentCommandIndex];
                 __instance.chatTextField.text = commandText;
             }
-        }
-        
+        }  
     }
     [HarmonyPatch(typeof(PlayerControllerB), nameof(PlayerControllerB.Update))]
     [HarmonyPrefix]
@@ -152,7 +149,7 @@ public class Plugin : BaseUnityPlugin
             __instance.isJumping = true;
             __instance.movementAudio.PlayOneShot(StartOfRound.Instance.playerJumpSFX);
 
-            __instance.jumpCoroutine = __instance.StartCoroutine(plugin.PlayerJump(__instance));
+            __instance.jumpCoroutine = __instance.StartCoroutine(PlayerEnumerators.PlayerJump(__instance, plugin.jumpForce));
         }
     }
     // Disallow jump if in noclip
@@ -417,21 +414,5 @@ public class Plugin : BaseUnityPlugin
                 logger.LogInfo($"[DEBUG MENU] Spawned {enemyType.enemyName} at {spawnPosition}");
             }
         }
-    }
-
-    public IEnumerator PlayerJump(PlayerControllerB player)
-    {
-        player.playerBodyAnimator.SetBool("Jumping", value: true);
-        yield return new WaitForSeconds(0.15f);
-        player.fallValue = jumpForce;
-        player.fallValueUncapped = jumpForce;
-        yield return new WaitForSeconds(0.1f);
-        player.isJumping = false;
-        player.isFallingFromJump = true;
-        yield return new WaitUntil(() => player.thisController.isGrounded);
-        player.playerBodyAnimator.SetBool("Jumping", value: false);
-        player.isFallingFromJump = false;
-        //player.PlayerHitGroundEffects();
-        player.jumpCoroutine = null;
     }
 }

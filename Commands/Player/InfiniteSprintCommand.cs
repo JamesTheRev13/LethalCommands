@@ -5,7 +5,7 @@ namespace LethalCommands.Commands.Player;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class InfiniteSprintCommand : CommandBase
 {
-    // Constructor passing the logger to the base class
+    
     public InfiniteSprintCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
     {
     }
