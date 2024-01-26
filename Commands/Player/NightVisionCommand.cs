@@ -19,11 +19,11 @@ public class NightVisionCommand : CommandBase
     protected override void ExecuteCommand()
     {
         // TODO: Add support to customize night vision (color, range, intensity, etc..)
-        plugin.nightVision = !plugin.nightVision;
+        Plugin. Instance.nightVision = !Plugin.Instance.nightVision;
 
         CommandTitle = "Night Vision";
-        CommandBody = "Night Vision set to: " + plugin.nightVision.ToString();
-        logger.LogInfo("Night Vision toggled to " + plugin.nightVision.ToString());
+        CommandBody = "Night Vision set to: " + Plugin.Instance.nightVision.ToString();
+        logger.LogInfo("Night Vision toggled to " + Plugin.Instance.nightVision.ToString());
     }
 
     protected override void HandleExecuteError(Exception ex)

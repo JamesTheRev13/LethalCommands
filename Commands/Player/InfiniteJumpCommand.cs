@@ -18,10 +18,10 @@ public class InfiniteJumpCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        plugin.infiniteJump = !plugin.infiniteJump;
+        Plugin.Instance.infiniteJump = !Plugin.Instance.infiniteJump;
         CommandTitle = "Infinite Jump";
-        CommandBody = "Infinite Jump set to: " + plugin.infiniteJump.ToString();
-        logger.LogInfo("Infinite Jump toggled to " + plugin.infiniteJump.ToString());
+        CommandBody = "Infinite Jump set to: " + Plugin.Instance.infiniteJump.ToString();
+        logger.LogInfo("Infinite Jump toggled to " + Plugin.Instance.infiniteJump.ToString());
         
     }
 

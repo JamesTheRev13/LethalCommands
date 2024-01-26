@@ -18,10 +18,10 @@ public class InfiniteCreditsCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        plugin.infiniteCredits = !plugin.infiniteCredits;
+        Plugin.Instance.infiniteCredits = !Plugin.Instance.infiniteCredits;
         CommandTitle = "Infinite Credits";
-        CommandBody = "Infinite Credits set to: " + plugin.infiniteCredits.ToString();
-        logger.LogInfo("Infinite Credits toggled to " + plugin.infiniteCredits.ToString());
+        CommandBody = "Infinite Credits set to: " + Plugin.Instance.infiniteCredits.ToString();
+        logger.LogInfo("Infinite Credits toggled to " + Plugin.Instance.infiniteCredits.ToString());
 
     }
 

@@ -59,7 +59,7 @@ public class EnemySpawnCommand : CommandBase
                     CommandBody = "Invalid Item Count";
                 }
             }
-            plugin.logger.LogInfo($"Attempting to spawn {count} {(isInside ? insideEnemy.enemyType.enemyName : outsideEnemy.enemyType.enemyName)} at player position: {pos}");
+            Plugin.Instance.logger.LogInfo($"Attempting to spawn {count} {(isInside ? insideEnemy.enemyType.enemyName : outsideEnemy.enemyType.enemyName)} at player position: {pos}");
             for (int i = 0; i < count; i++)
             {
                 // Outside enemies spawn differently for some reason
@@ -69,7 +69,7 @@ public class EnemySpawnCommand : CommandBase
                     obj.gameObject.GetComponentInChildren<NetworkObject>().Spawn(destroyWithScene: true);
                 } else RoundManager.Instance.SpawnEnemyOnServer(pos, yRot, enemyId);
 
-                plugin.logger.LogInfo($"Attempted to spawn {(isInside ? insideEnemy.enemyType.enemyName : outsideEnemy.enemyType.enemyName)} #{i + 1} at player position: {pos}");
+                Plugin. Instance.logger.LogInfo($"Attempted to spawn {(isInside ? insideEnemy.enemyType.enemyName : outsideEnemy.enemyType.enemyName)} #{i + 1} at player position: {pos}");
             }
             CommandBody = $"Spawned {count} {(isInside ? insideEnemy.enemyType.enemyName : outsideEnemy.enemyType.enemyName)}";
         }

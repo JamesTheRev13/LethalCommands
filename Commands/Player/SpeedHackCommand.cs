@@ -24,15 +24,15 @@ public class SpeedHackCommand : CommandBase
         if (parameters.Length == 2)
         {
             var speed = float.Parse(parameters[1]);
-            plugin.movementSpeed = speed;
-            CommandBody = "Movement Speed set to: " + plugin.movementSpeed.ToString();
+            Plugin.Instance.movementSpeed = speed;
+            CommandBody = "Movement Speed set to: " + Plugin.Instance.movementSpeed.ToString();
         } else
         {
             // /speed - toggles speedHack
-            plugin.speedHack = !plugin.speedHack;
+            Plugin.Instance.speedHack = !Plugin.Instance.speedHack;
             
-            CommandBody = "SpeedHack set to: " + plugin.speedHack.ToString();
-            logger.LogInfo("SpeedHack toggled to " + plugin.speedHack.ToString());
+            CommandBody = "SpeedHack set to: " + Plugin.Instance.speedHack.ToString();
+            logger.LogInfo("SpeedHack toggled to " + Plugin.Instance.speedHack.ToString());
         }
     }
 

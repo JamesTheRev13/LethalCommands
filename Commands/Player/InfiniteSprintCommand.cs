@@ -18,10 +18,10 @@ public class InfiniteSprintCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        plugin.infiniteSprint = !plugin.infiniteSprint;
+        Plugin.Instance.infiniteSprint = !Plugin.Instance.infiniteSprint;
         CommandTitle = "Infinite Sprint";
-        CommandBody = "Infinite Sprint set to: " + plugin.infiniteSprint.ToString();
-        logger.LogInfo("Infinite Sprint toggled to " + plugin.infiniteSprint.ToString());
+        CommandBody = "Infinite Sprint set to: " + Plugin.Instance.infiniteSprint.ToString();
+        logger.LogInfo("Infinite Sprint toggled to " + Plugin.Instance.infiniteSprint.ToString());
         
     }
 

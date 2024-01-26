@@ -28,11 +28,11 @@ public class UnlockAllDoorsCommand : CommandBase
 
         foreach (DoorLock door in doorLocks)
         {
-            plugin.logger.LogInfo("Found Door (" + door.GetInstanceID() + ") Locked? -> " + door.isLocked.ToString());
+            Plugin.Instance.logger.LogInfo("Found Door (" + door.GetInstanceID() + ") Locked? -> " + door.isLocked.ToString());
             if (door.isLocked)
             {
                 door.UnlockDoorSyncWithServer();
-                plugin.logger.LogInfo("Unlocked Door (" + door?.GetInstanceID() + ") -> " + door?.isLocked.ToString());
+                Plugin.Instance.logger.LogInfo("Unlocked Door (" + door?.GetInstanceID() + ") -> " + door?.isLocked.ToString());
             }
         }
     }

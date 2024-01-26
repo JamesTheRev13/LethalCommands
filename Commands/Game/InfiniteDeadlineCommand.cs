@@ -19,10 +19,10 @@ public class InfiniteDeadlineCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        plugin.infiniteDeadline = !plugin.infiniteDeadline;
+        Plugin.Instance.infiniteDeadline = !Plugin.Instance.infiniteDeadline;
         CommandTitle = "Infinite Deadline";
-        CommandBody = "Infinite Deadline set to: " + plugin.infiniteDeadline.ToString();
-        logger.LogInfo("Infinite Deadline toggled to " + plugin.infiniteDeadline.ToString());
+        CommandBody = "Infinite Deadline set to: " + Plugin.Instance.infiniteDeadline.ToString();
+        logger.LogInfo("Infinite Deadline toggled to " + Plugin.Instance.infiniteDeadline.ToString());
 
     }
 

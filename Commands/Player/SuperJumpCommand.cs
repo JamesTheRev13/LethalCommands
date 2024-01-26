@@ -24,15 +24,15 @@ public class SuperJumpCommand : CommandBase
         if (parameters.Length == 2)
         {
             var force = float.Parse(parameters[1]);
-            plugin.jumpForce = force;
-            CommandBody = "Jump Force set to: " + plugin.jumpForce.ToString();
+            Plugin.Instance.jumpForce = force;
+            CommandBody = "Jump Force set to: " + Plugin.Instance.jumpForce.ToString();
         } else
         {
             // /jump - toggles superJump
-            plugin.superJump = !plugin.superJump;
+            Plugin.Instance.superJump = !Plugin.Instance.superJump;
             
-            CommandBody = "Super Jump set to: " + plugin.superJump.ToString();
-            logger.LogInfo("Super Jump toggled to " + plugin.superJump.ToString());
+            CommandBody = "Super Jump set to: " + Plugin.Instance.superJump.ToString();
+            logger.LogInfo("Super Jump toggled to " + Plugin.Instance.superJump.ToString());
         }
     }
 

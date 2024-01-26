@@ -55,17 +55,17 @@ public class TeleportCommand : CommandBase
         {
             CommandBody = "Teleport " + localPlayer.playerUsername + " to Indoor Entrance";
             logger.LogInfo("Current player position: " + localPlayer.transform.position.ToString());
-            logger.LogInfo("Attempting to teleport " + localPlayer.playerUsername + " to position: " + plugin.GetEntrance().ToString());
+            logger.LogInfo("Attempting to teleport " + localPlayer.playerUsername + " to position: " + Plugin.Instance.GetEntrance().ToString());
 
-            localPlayer.TeleportPlayer(plugin.GetEntrance(), false);
+            localPlayer.TeleportPlayer(Plugin.Instance.GetEntrance(), false);
         }
         if (parameters[1].ToLower().Equals("outside"))
         {
             CommandBody = "Teleport " + localPlayer.playerUsername + " to Outdoor Entrance";
             logger.LogInfo("Current player position: " + localPlayer.transform.position.ToString());
-            logger.LogInfo("Attempting to teleport " + localPlayer.playerUsername + " to position: " + plugin.GetEntrance(true).ToString());
+            logger.LogInfo("Attempting to teleport " + localPlayer.playerUsername + " to position: " + Plugin.Instance.GetEntrance(true).ToString());
 
-            localPlayer.TeleportPlayer(plugin.GetEntrance(true), false);
+            localPlayer.TeleportPlayer(Plugin.Instance.GetEntrance(true), false);
         }
         if (matchedPlayer != null)
         {

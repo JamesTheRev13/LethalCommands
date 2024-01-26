@@ -34,13 +34,13 @@ public class ItemSpawnCommand : CommandBase
         allItemsList.itemsList
             .ForEach(item =>
             {
-                plugin.logger.LogInfo("Item Name: " + item.itemName);
-                plugin.logger.LogInfo("Item ID: " + item.itemId);
+                Plugin.Instance.logger.LogInfo("Item Name: " + item.itemName);
+                Plugin.Instance.logger.LogInfo("Item ID: " + item.itemId);
             }
         );
 
         Item item = allItemsList?.itemsList.Find(item => item.itemName.ToLower().Contains(parameters[1].Trim().ToLower())) ?? null;
-        plugin.logger.LogInfo("Found Item: " + item?.itemName);
+        Plugin.Instance.logger.LogInfo("Found Item: " + item?.itemName);
 
         if (item != null)
         {
@@ -60,19 +60,19 @@ public class ItemSpawnCommand : CommandBase
                 if (int.TryParse(parameters[parameters.Length - 1], out int count1))
                 {
                     count = count1;
-                    plugin.logger.LogInfo("Parsed Count: " + count);
+                    Plugin.Instance.logger.LogInfo("Parsed Count: " + count);
                 }
             }
-            plugin.logger.LogInfo("Spawn For All?: " + spawnForAll);
-            plugin.logger.LogInfo("Matched Player?: " + matchedPlayer.playerUsername ?? "FALSE");
+            Plugin.Instance.logger.LogInfo("Spawn For All?: " + spawnForAll);
+            Plugin.Instance.logger.LogInfo("Matched Player?: " + matchedPlayer.playerUsername ?? "FALSE");
 
             var players = spawnForAll
                 ? StartOfRound.Instance.allPlayerScripts.ToList().FindAll(player => !player.playerUsername.Contains("Player #")) // Filter out non-existent players
                 : new List<PlayerControllerB>() { matchedPlayer };
-            plugin.logger.LogInfo("New Player List Length: " + players.Count);
+            Plugin.Instance.logger.LogInfo("New Player List Length: " + players.Count);
             players.ForEach(player =>
             {
-                plugin.logger.LogInfo("Current Player iteration of Players: " + player.playerUsername);
+                Plugin.Instance.logger.LogInfo("Current Player iteration of Players: " + player.playerUsername);
                 Vector3 spawnPosition = player.transform.position;
                 if (player.isPlayerDead)
                 {
@@ -81,7 +81,7 @@ public class ItemSpawnCommand : CommandBase
 
                 for (int i = 0; i < count; i++)
                 {
-                    plugin.logger.LogInfo("Current Count iteration of Item Count: " + i);
+                    Plugin.Instance.logger.LogInfo("Current Count iteration of Item Count: " + i);
                     GameObject itemObj = UnityEngine.Object.Instantiate(item.spawnPrefab, spawnPosition, Quaternion.identity);
                     itemObj.GetComponent<GrabbableObject>().fallTime = 0f;
                     int scrapValue = UnityEngine.Random.Range(60, 200);
@@ -89,9 +89,9 @@ public class ItemSpawnCommand : CommandBase
                     // setting a random scrap value for now, maybe make this configurable?
                     itemObj.GetComponent<GrabbableObject>().SetScrapValue(scrapValue);
                     if (parameters[1].ToLower().Contains("shotgun"))
-                        itemObj.GetComponent<ShotgunItem>().shellsLoaded = plugin.infiniteAmmo ? 2147483647 : 2;
+                        itemObj.GetComponent<ShotgunItem>().shellsLoaded = Plugin.Instance.infiniteAmmo ? 2147483647 : 2;
                     itemObj.GetComponent<NetworkObject>().Spawn();
-                    plugin.logger.LogInfo($"Attempted to spawn {parameters[1]}!");
+                    Plugin.Instance.logger.LogInfo($"Attempted to spawn {parameters[1]}!");
                     CommandBody = "Spawned " + count + " " + item.itemName + " at " + player.playerUsername;
                 }
             });

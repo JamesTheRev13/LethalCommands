@@ -10,7 +10,7 @@ public class GodModeCommand : CommandBase
     
     public GodModeCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
     {
-        //godMode = plugin.godMode;
+        //godMode = Instance.godMode;
     }
 
     protected override bool ValidateParameters()
@@ -22,10 +22,10 @@ public class GodModeCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        plugin.godMode = !plugin.godMode;
+        Plugin.Instance.godMode = !Plugin.Instance.godMode;
         CommandTitle = "God Mode";
-        CommandBody = "God Mode set to: " + plugin.godMode.ToString();
-        logger.LogInfo("God mode toggled to " + plugin.godMode.ToString());
+        CommandBody = "God Mode set to: " + Plugin.Instance.godMode.ToString();
+        logger.LogInfo("God mode toggled to " + Plugin.Instance.godMode.ToString());
         
     }
 

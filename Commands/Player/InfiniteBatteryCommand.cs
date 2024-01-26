@@ -18,11 +18,11 @@ public class InfiniteBatteryCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        plugin.infiniteBattery = !plugin.infiniteBattery;
+        Plugin.Instance.infiniteBattery = !Plugin.Instance.infiniteBattery;
 
         CommandTitle = "Infinite Battery";      
-        CommandBody = "Infinite Battery set to: " + plugin.infiniteBattery.ToString();
-        logger.LogInfo("Infinite Battery toggled to " + plugin.infiniteBattery.ToString());
+        CommandBody = "Infinite Battery set to: " + Plugin.Instance.infiniteBattery.ToString();
+        logger.LogInfo("Infinite Battery toggled to " + Plugin.Instance.infiniteBattery.ToString());
         
     }
 

@@ -24,15 +24,15 @@ public class NoClipCommand : CommandBase
         if (parameters.Length == 2)
         {
             var speed = float.Parse(parameters[1]);
-            plugin.noclipSpeed = speed;
-            CommandBody = "NoClip speed set to: " + plugin.noclipSpeed.ToString();
+            Plugin.Instance.noclipSpeed = speed;
+            CommandBody = "NoClip speed set to: " + Plugin.Instance.noclipSpeed.ToString();
         } else
         {
             // /noclip - toggles noclip
-            plugin.noclip = !plugin.noclip;
+            Plugin.Instance.noclip = !Plugin.Instance.noclip;
             
-            CommandBody = "NoClip set to: " + plugin.noclip.ToString();
-            logger.LogInfo("NoClip toggled to " + plugin.noclip.ToString());
+            CommandBody = "NoClip set to: " + Plugin.Instance.noclip.ToString();
+            logger.LogInfo("NoClip toggled to " + Plugin.Instance.noclip.ToString());
         }
     }
 

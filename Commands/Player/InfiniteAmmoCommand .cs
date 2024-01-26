@@ -18,11 +18,11 @@ public class InfiniteAmmoCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        plugin.infiniteAmmo = !plugin.infiniteAmmo;
+        Plugin.Instance.infiniteAmmo = !Plugin. Instance.infiniteAmmo;
 
         CommandTitle = "Infinite Ammo";      
-        CommandBody = "Infinite Ammo set to: " + plugin.infiniteAmmo.ToString();
-        logger.LogInfo("Infinite Ammo toggled to " + plugin.infiniteAmmo.ToString());
+        CommandBody = "Infinite Ammo set to: " + Plugin.Instance.infiniteAmmo.ToString();
+        logger.LogInfo("Infinite Ammo toggled to " + Plugin.Instance.infiniteAmmo.ToString());
         
     }
 

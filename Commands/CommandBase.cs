@@ -64,9 +64,9 @@ public abstract class CommandBase : ICommand
                 CommandTitle = "Not Allowed";
                 CommandBody = "Must be host";
             } else { 
-                plugin.currentCommandIndex = -1;
-                plugin.commandHistory.Insert(0, GetCommand());
-                plugin.logger.LogInfo($"Added Command to Command History: {GetCommand()}");
+                Plugin.Instance.currentCommandIndex = -1;
+                Plugin.Instance.commandHistory.Insert(0, GetCommand());
+                Plugin.Instance.logger.LogInfo($"Added Command to Command History: {GetCommand()}");
                 ExecuteCommand(); // Call the specific logic in the derived class
             }
             DisplayCommandLog();
