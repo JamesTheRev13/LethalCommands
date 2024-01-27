@@ -1,12 +1,13 @@
 ﻿using BepInEx;
 using BepInEx.Logging;
-using GameNetcodeStuff;
 using HarmonyLib;
 using LethalCommands.Commands;
 using LethalCommands.Patches;
+using LethalCommands.Extensions;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
+using Microsoft.Extensions.DependencyInjection;
 
 /* PLUGIN BY BOB SAGET -  INSPIRED BY GAMEMASTER, DANCETOOLS, and NON-LETHAL-COMPANY - VERY EARLY WORK IN PROGRESS */
 namespace LethalCommands;
@@ -17,7 +18,7 @@ public class Plugin : BaseUnityPlugin
     public ManualLogSource logger;
     public static Plugin Instance;
     // Command Pattern - https://refactoring.guru/design-patterns/command
-    public CommandFactory commandFactory;
+    private CommandFactory commandFactory;
 
     #region Command Fields
     public List<string> commandHistory = new();
@@ -46,7 +47,10 @@ public class Plugin : BaseUnityPlugin
     {
         logger = Logger;
         Instance = this;
-        commandFactory = new CommandFactory(Instance, logger);
+
+        var serviceCollection = new ServiceCollection();
+        PluginDiExtension.AddPluginDi(serviceCollection);
+        commandFactory = new CommandFactory(Instance, serviceCollection.BuildServiceProvider());
 
         logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         // There has to be a better way to do this lol

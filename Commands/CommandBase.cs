@@ -33,7 +33,7 @@ public abstract class CommandBase : ICommand
         }
         catch (Exception ex)
         {
-            HandleUnexpectedError(ex);
+            HandleExecuteError(ex);
         }
     }
     
@@ -47,11 +47,6 @@ public abstract class CommandBase : ICommand
     protected virtual void HandleInvalidParameters()
     {
         logger.LogError("Invalid parameters for command: " + GetType().Name);
-    }
-
-    protected virtual void HandleUnexpectedError(Exception ex)
-    {
-        logger.LogError("Unexpected error in command: " + GetType().Name + "\n" + ex.Message);
     }
 
     public void Execute()
