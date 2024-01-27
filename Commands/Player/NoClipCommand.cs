@@ -1,14 +1,13 @@
 ﻿using BepInEx.Logging;
-using System;
 
 namespace LethalCommands.Commands.Player;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class NoClipCommand : CommandBase
 {
-    
-    public NoClipCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
+    public NoClipCommand()
     {
-
+        CommandTitle = "NoClip";
+        ManualLogSource = Logger.CreateLogSource("NoClipCommand");
     }
 
     protected override bool ValidateParameters()
@@ -18,7 +17,6 @@ public class NoClipCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        CommandTitle = "NoClip";
 
         // /noclip <speed> - sets the speed of noclip
         if (parameters.Length == 2)
@@ -26,21 +24,15 @@ public class NoClipCommand : CommandBase
             var speed = float.Parse(parameters[1]);
             Plugin.Instance.noclipSpeed = speed;
             CommandBody = "NoClip speed set to: " + Plugin.Instance.noclipSpeed.ToString();
-        } else
+        }
+        else
         {
             // /noclip - toggles noclip
             Plugin.Instance.noclip = !Plugin.Instance.noclip;
-            
-            CommandBody = "NoClip set to: " + Plugin.Instance.noclip.ToString();
-            logger.LogInfo("NoClip toggled to " + Plugin.Instance.noclip.ToString());
-        }
-    }
 
-    protected override void HandleExecuteError(Exception ex)
-    {
-        base.HandleExecuteError(ex);
-        CommandTitle = "NoClip Error";
-        CommandBody = $"Error setting NoClip";
+            CommandBody = "NoClip set to: " + Plugin.Instance.noclip.ToString();
+            ManualLogSource.LogInfo("NoClip toggled to " + Plugin.Instance.noclip.ToString());
+        }
     }
 }
 

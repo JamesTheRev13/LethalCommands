@@ -44,12 +44,12 @@ public class PlayerControllerBPatches
             Mathf.Clamp(__instance.sprintMeter += 0.02f, 0f, 1f);
         }
 
-        if (UnityInput.Current.GetKeyUp(KeyCode.KeypadPlus) && __instance.isPlayerDead)
-        {
-            ICommand command = Plugin.Instance.commandFactory.CreateCommand("/respawn");
-            command.SetParameters("/respawn");
-            command.Execute();
-        }
+        //if (UnityInput.Current.GetKeyUp(KeyCode.KeypadPlus) && __instance.isPlayerDead)
+        //{
+        //    ICommand command = Plugin.Instance.commandFactory.CreateCommand("/respawn");
+        //    command.SetParameters("/respawn");
+        //    command.Execute();
+        //}
 
         NoClip();
     }
@@ -76,7 +76,6 @@ public class PlayerControllerBPatches
     static bool OverrideDeath()
     {
         StartOfRound.Instance.allowLocalPlayerDeath = !Plugin.Instance.godMode;
-        Plugin.Instance.logger.LogInfo("OverrideDeath: " + Plugin.Instance.godMode.ToString());
         return !Plugin.Instance.godMode;
     }
 

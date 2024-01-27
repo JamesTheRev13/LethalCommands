@@ -8,6 +8,8 @@ using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
 using Microsoft.Extensions.DependencyInjection;
+using System.Linq;
+using HarmonyLib.Public.Patching;
 
 /* PLUGIN BY BOB SAGET -  INSPIRED BY GAMEMASTER, DANCETOOLS, and NON-LETHAL-COMPANY - VERY EARLY WORK IN PROGRESS */
 namespace LethalCommands;
@@ -18,7 +20,7 @@ public class Plugin : BaseUnityPlugin
     public ManualLogSource logger;
     public static Plugin Instance;
     // Command Pattern - https://refactoring.guru/design-patterns/command
-    private CommandFactory commandFactory;
+    public CommandFactory commandFactory;
 
     #region Command Fields
     public List<string> commandHistory = new();
@@ -43,14 +45,15 @@ public class Plugin : BaseUnityPlugin
     public float nightVisionRange = 10000f;
     public Color nightVisionColor = Color.green;
     #endregion
+
     private void Awake()
     {
         logger = Logger;
         Instance = this;
 
         var serviceCollection = new ServiceCollection();
-        PluginDiExtension.AddPluginDi(serviceCollection);
-        commandFactory = new CommandFactory(Instance, serviceCollection.BuildServiceProvider());
+        serviceCollection.AddCommands();
+        commandFactory = new CommandFactory(serviceCollection.BuildServiceProvider());
 
         logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         // There has to be a better way to do this lol
@@ -64,7 +67,9 @@ public class Plugin : BaseUnityPlugin
         Harmony.CreateAndPatchAll(typeof(RoundManagerPatches));
         Harmony.CreateAndPatchAll(typeof(HUDManagerPatches));
 
-        logger.LogInfo($"{PluginInfo.PLUGIN_GUID} patched!");
+        Harmony.GetAllPatchedMethods().ToList().ForEach(x => logger.LogInfo($"Patched {x.GetPatchInfo().GetType().Name} - {x.Name}"));
+
+        logger.LogInfo($"{PluginInfo.PLUGIN_GUID} finished patching!");
     }
 
     public Vector3 GetEntrance(bool getOutsideEntrance = false)

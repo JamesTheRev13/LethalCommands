@@ -1,16 +1,13 @@
 ﻿using LethalCommands.Commands.Game;
 using LethalCommands.Commands.Player;
 using Microsoft.Extensions.DependencyInjection;
-using System;
 
 namespace LethalCommands.Extensions
 {
-    public class PluginDiExtension
+    public static class PluginDiExtension
     {
-        public static IServiceCollection AddPluginDi(IServiceCollection serviceCollection)
+        public static IServiceCollection AddCommands(this IServiceCollection serviceCollection)
         {
-            
-
             serviceCollection.AddSingleton<GodModeCommand>();
             serviceCollection.AddSingleton<InfiniteAmmoCommand>();
             serviceCollection.AddSingleton<InfiniteBatteryCommand>();

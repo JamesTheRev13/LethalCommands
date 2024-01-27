@@ -12,7 +12,7 @@ public class RoundManagerPatches
     //static bool OverrideEnemySpawn()
     //{
     //    // Should add this behind a toggle... may cause some unintended funky behavior
-    //    Plugin.Instance.logger.LogInfo("Force Spawned Enemy -> EnemyCannotBeSpawned: false");
+    //    ManualLogSource.LogInfo("Force Spawned Enemy -> EnemyCannotBeSpawned: false");
     //    return false;
     //}
 }

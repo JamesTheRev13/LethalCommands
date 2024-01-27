@@ -1,14 +1,14 @@
 ﻿using BepInEx.Logging;
-using System;
 
 namespace LethalCommands.Commands.Player;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class SpeedHackCommand : CommandBase
 {
     
-    public SpeedHackCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
+    public SpeedHackCommand()
     {
-
+        CommandTitle = "SpeedHack";
+        ManualLogSource = Logger.CreateLogSource("SpeedHackCommand");
     }
 
     protected override bool ValidateParameters()
@@ -18,8 +18,6 @@ public class SpeedHackCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        CommandTitle = "SpeedHack";
-
         // /speed <speed> - sets the movement speed while speedhack is enabled
         if (parameters.Length == 2)
         {
@@ -32,15 +30,8 @@ public class SpeedHackCommand : CommandBase
             Plugin.Instance.speedHack = !Plugin.Instance.speedHack;
             
             CommandBody = "SpeedHack set to: " + Plugin.Instance.speedHack.ToString();
-            logger.LogInfo("SpeedHack toggled to " + Plugin.Instance.speedHack.ToString());
+            ManualLogSource.LogInfo("SpeedHack toggled to " + Plugin.Instance.speedHack.ToString());
         }
-    }
-
-    protected override void HandleExecuteError(Exception ex)
-    {
-        base.HandleExecuteError(ex);
-        CommandTitle = "SpeedHack Error";
-        CommandBody = $"Error setting SpeedHack";
     }
 }
 

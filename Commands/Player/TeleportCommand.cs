@@ -6,10 +6,10 @@ namespace LethalCommands.Commands.Player;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class TeleportCommand : CommandBase
 {
-    
-    public TeleportCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
+    public TeleportCommand()
     {
-
+        CommandTitle = $"Teleport {GameNetworkManager.Instance.localPlayerController.playerUsername}";
+        ManualLogSource = Logger.CreateLogSource("TeleportCommand");
     }
 
     protected override bool ValidateParameters()
@@ -25,59 +25,38 @@ public class TeleportCommand : CommandBase
             .ToList()
             .Find(player => player.playerUsername.ToLower().Contains(parameters[1].ToLower())) ?? null;
 
-        CommandTitle = $"Teleport {localPlayer.playerUsername}";
         switch (parameters[1].ToLower())
         {
             case "ship":
+                CommandBody = $"Teleport {localPlayer.playerUsername} to Ship";
+                ManualLogSource.LogInfo($"Current player position: {localPlayer.transform.position.ToString()}");
+                ManualLogSource.LogInfo($"Attempting to teleport {localPlayer.playerUsername} to position: {StartOfRound.Instance.playerSpawnPositions[0].transform.position.ToString()}");
+                localPlayer.TeleportPlayer(StartOfRound.Instance.playerSpawnPositions[0].transform.position, false);
+                return;
+            case "inside":
+                CommandBody = $"Teleport {localPlayer.playerUsername} to Indoor Entrance";
+                ManualLogSource.LogInfo($"Current player position: {localPlayer.transform.position.ToString()}");
+                ManualLogSource.LogInfo($"Attempting to teleport {localPlayer.playerUsername} to position: {Plugin.Instance.GetEntrance().ToString()}");
 
-                break;
+                localPlayer.TeleportPlayer(Plugin.Instance.GetEntrance(), false);
+                return;
+            case "outside":
+                CommandBody = $"Teleport {localPlayer.playerUsername} to Outdoor Entrance";
+                ManualLogSource.LogInfo($"Current player position: {localPlayer.transform.position.ToString()}");
+                ManualLogSource.LogInfo($"Attempting to teleport {localPlayer.playerUsername} to position: {Plugin.Instance.GetEntrance(true).ToString()}");
 
+                localPlayer.TeleportPlayer(Plugin.Instance.GetEntrance(true), false);
+                return;
             default:
-                if (matchedPlayer == null)
+                if (matchedPlayer != null)
                 {
-                    CommandBody = $"Invalid Username: {parameters[1]}";
-                    break;
-                }    
-                logger.LogInfo("Current player position: " + localPlayer.transform.position.ToString());
-                logger.LogInfo($"Attempting to teleport {localPlayer.playerUsername} to {matchedPlayer.playerUsername} at position: {matchedPlayer.transform.position.ToString()}");
-                localPlayer.TeleportPlayer(matchedPlayer.transform.position, false);
-                logger.LogInfo($"Teleported {localPlayer.playerUsername}");
-                break;
+                    ManualLogSource.LogInfo($"Current player position: {localPlayer.transform.position.ToString()}");
+                    ManualLogSource.LogInfo($"Attempting to teleport {localPlayer.playerUsername} to {matchedPlayer.playerUsername} at position: {matchedPlayer.transform.position.ToString()}");
+                    localPlayer.TeleportPlayer(matchedPlayer.transform.position, false);
+                    return;
+                }
+                throw new ArgumentException($"Invalid Teleport Command: {GetCommand()}");
         }
-        if (parameters[1].ToLower().Equals("ship"))
-        {
-            CommandBody = "Teleport " + localPlayer.playerUsername + " to Ship";
-            logger.LogInfo("Current player position: " + localPlayer.transform.position.ToString());
-            logger.LogInfo("Attempting to teleport " + localPlayer.playerUsername + " to position: " + StartOfRound.Instance.playerSpawnPositions[0].transform.position.ToString());
-            localPlayer.TeleportPlayer(StartOfRound.Instance.playerSpawnPositions[0].transform.position, false);
-        }
-        if (parameters[1].ToLower().Equals("inside"))
-        {
-            CommandBody = "Teleport " + localPlayer.playerUsername + " to Indoor Entrance";
-            logger.LogInfo("Current player position: " + localPlayer.transform.position.ToString());
-            logger.LogInfo("Attempting to teleport " + localPlayer.playerUsername + " to position: " + Plugin.Instance.GetEntrance().ToString());
-
-            localPlayer.TeleportPlayer(Plugin.Instance.GetEntrance(), false);
-        }
-        if (parameters[1].ToLower().Equals("outside"))
-        {
-            CommandBody = "Teleport " + localPlayer.playerUsername + " to Outdoor Entrance";
-            logger.LogInfo("Current player position: " + localPlayer.transform.position.ToString());
-            logger.LogInfo("Attempting to teleport " + localPlayer.playerUsername + " to position: " + Plugin.Instance.GetEntrance(true).ToString());
-
-            localPlayer.TeleportPlayer(Plugin.Instance.GetEntrance(true), false);
-        }
-        if (matchedPlayer != null)
-        {
-            
-        }
-    }
-
-    protected override void HandleExecuteError(Exception ex)
-    {
-        base.HandleExecuteError(ex);
-        CommandTitle = "Teleport Error";
-        CommandBody = $"Error setting Teleport";
     }
 }
 

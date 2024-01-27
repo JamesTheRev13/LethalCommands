@@ -2,6 +2,7 @@
 using BepInEx;
 using HarmonyLib;
 using LethalCommands.Commands;
+using System;
 using UnityEngine;
 
 namespace LethalCommands.Patches;
@@ -13,17 +14,35 @@ public class HUDManagerPatches
     [HarmonyPrefix]
     static void TextChatCommands(HUDManager __instance)
     {
-        // TODO: add a command history, and allow UP/DOWN key navigation of command history
         string text = __instance.chatTextField.text;
-        Plugin.Instance.logger.LogInfo($"Attempting to run command: {text}");
+
         if (text.StartsWith('/'))
         {
-            ICommand command = Plugin.Instance.commandFactory.CreateCommand(text.ToLower());
-            if (command != null)
+            try
             {
-                command.SetParameters(text);
-                command.Execute();
-                Plugin.Instance.logger.LogInfo($"Executed Command: {text}");
+                ICommand command = Plugin.Instance.commandFactory.GetCommand(text.ToLower());
+                if (command != null)
+                {
+                    Plugin.Instance.logger.LogInfo($"Executing Command: {command?.CommandTitle}");
+                    command.SetParameters(text);
+                    command.Execute();
+                    DisplayCommandLog(command.CommandTitle, command.CommandBody);
+                }
+            }
+            catch (InvalidOperationException ex)
+            {
+                Plugin.Instance.logger.LogError($"Not Allowed: {text}. Error: {ex.Message}");
+                DisplayCommandLog("Not Allowed", ex.Message);
+            }
+            catch (ArgumentException ex)
+            {
+                Plugin.Instance.logger.LogError($"Invalid Command: {text}. Error: {ex.Message}");
+                DisplayCommandLog("Invalid Command", ex.Message);
+            }
+            catch (Exception ex)
+            {
+                Plugin.Instance.logger.LogError($"Unexpected Error: {text}. Error: {ex.Message}");
+                DisplayCommandLog("Error", ex.Message);
             }
         }
     }
@@ -65,5 +84,11 @@ public class HUDManagerPatches
     //        ((Behaviour)(object)typingIndicator).enabled = true;
     //    }
     //}
+
+    static void DisplayCommandLog(string title, string body)
+    {
+        HUDManager.Instance.DisplayTip(title, body);
+        HUDManager.Instance.chatTextField.text = "";
+    }
 }
 

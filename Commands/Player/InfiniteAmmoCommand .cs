@@ -1,14 +1,13 @@
 ﻿using BepInEx.Logging;
-using System;
 
 namespace LethalCommands.Commands.Player;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class InfiniteAmmoCommand : CommandBase
 {
-    
-    public InfiniteAmmoCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
+    public InfiniteAmmoCommand()
     {
-
+        CommandTitle = "Infinite Ammo";
+        ManualLogSource = Logger.CreateLogSource("InfiniteAmmoCommand");
     }
 
     protected override bool ValidateParameters()
@@ -20,17 +19,8 @@ public class InfiniteAmmoCommand : CommandBase
     {
         Plugin.Instance.infiniteAmmo = !Plugin. Instance.infiniteAmmo;
 
-        CommandTitle = "Infinite Ammo";      
         CommandBody = "Infinite Ammo set to: " + Plugin.Instance.infiniteAmmo.ToString();
-        logger.LogInfo("Infinite Ammo toggled to " + Plugin.Instance.infiniteAmmo.ToString());
-        
-    }
-
-    protected override void HandleExecuteError(Exception ex)
-    {
-        base.HandleExecuteError(ex);
-        CommandTitle = "Infinite Ammo Error";
-        CommandBody = $"Error setting Infinite Ammo";
+        ManualLogSource.LogInfo("Infinite Ammo toggled to " + Plugin.Instance.infiniteAmmo.ToString());
     }
 }
 
