@@ -49,8 +49,9 @@ public class TeleportCommand : CommandBase
             default:
                 if (matchedPlayer != null)
                 {
-                    ManualLogSource.LogInfo($"Current player position: {localPlayer.transform.position.ToString()}");
+                    ManualLogSource.LogInfo($"Current player position: {localPlayer.transform.position}");
                     ManualLogSource.LogInfo($"Attempting to teleport {localPlayer.playerUsername} to {matchedPlayer.playerUsername} at position: {matchedPlayer.transform.position}");
+                    CommandBody = $"Teleport {localPlayer.playerUsername} to {matchedPlayer.playerUsername}";
                     localPlayer.TeleportPlayer(matchedPlayer.transform.position, false);
                     return;
                 }

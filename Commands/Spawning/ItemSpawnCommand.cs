@@ -62,6 +62,11 @@ public class ItemSpawnCommand : CommandBase
                 ManualLogSource.LogInfo("Parsed Count: " + count);
             }
         }
+        if (count < 1)
+        {
+            throw new ArgumentException($"Invalid Count: {count}");
+        }
+
         ManualLogSource.LogInfo("Spawn For All?: " + spawnForAll);
         ManualLogSource.LogInfo("Matched Player?: " + matchedPlayer.playerUsername ?? "FALSE");
 
