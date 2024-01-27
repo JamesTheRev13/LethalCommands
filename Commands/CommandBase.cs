@@ -22,12 +22,12 @@ public abstract class CommandBase : ICommand
     {
         if (!ValidateParameters())
         {
-            ManualLogSource.LogError("Invalid parameters for command: " + GetType().Name);
+            Plugin.Instance.logger.LogError("Invalid parameters for command: " + GetType().Name);
             throw new ArgumentException("Invalid parameters : " + GetCommand());
         }
 
         parameters = inputCommand.Split(' ');
-        ManualLogSource.LogInfo("Parameters set for command: " + parameters);
+        Plugin.Instance.logger.LogInfo("Parameters set for command: " + parameters);
     }
     
     public virtual string GetCommand()
@@ -39,7 +39,7 @@ public abstract class CommandBase : ICommand
 
     public void Execute()
     {
-        ManualLogSource.LogInfo("Entered Execute() method");
+        Plugin.Instance.logger.LogInfo("Entered Execute() method");
 
         if (IsHostCommand && !GameNetworkManager.Instance.localPlayerController.IsHost)
         {
@@ -48,7 +48,7 @@ public abstract class CommandBase : ICommand
         
         Plugin.Instance.currentCommandIndex = -1;
         Plugin.Instance.commandHistory.Insert(0, GetCommand());
-        ManualLogSource.LogInfo($"Added Command to Command History: {GetCommand()}");
+        Plugin.Instance.logger.LogInfo($"Added Command to Command History: {GetCommand()}");
         ExecuteCommand();
     }
 

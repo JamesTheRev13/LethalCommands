@@ -1,45 +1,62 @@
-﻿using LethalCommands.Commands.Game;
+﻿using BepInEx.Logging;
+using LethalCommands.Commands.Game;
 using LethalCommands.Commands.Player;
-using Microsoft.Extensions.DependencyInjection;
 using System;
-
+using System.Collections.Generic;
+// Command Pattern
 namespace LethalCommands.Commands;
 
 public class CommandFactory
 {
-    private readonly IServiceProvider _serviceProvider;
+    protected ManualLogSource logger;
+    protected Plugin plugin;
+    private Dictionary<string, Func<ICommand>> commandRegistry = new Dictionary<string, Func<ICommand>>();
 
-    public CommandFactory(IServiceProvider serviceProvider)
+    public CommandFactory(Plugin Instance)
     {
-        _serviceProvider = serviceProvider;
+        plugin = Instance;
+        logger = Instance.logger;
+
+        /* Register Commands During Init */
+
+        // Player Commands
+        RegisterCommand("/god", () => new GodModeCommand());
+        RegisterCommand("/noclip", () => new NoClipCommand());
+        RegisterCommand("/ammo", () => new InfiniteAmmoCommand());
+        RegisterCommand("/vision", () => new NightVisionCommand());
+        RegisterCommand("/sprint", () => new InfiniteSprintCommand());
+        RegisterCommand("/speed", () => new SpeedHackCommand());
+        RegisterCommand("/jumps", () => new InfiniteJumpCommand());
+        RegisterCommand("/jump", () => new SuperJumpCommand());
+        RegisterCommand("/teleport", () => new TeleportCommand());
+        RegisterCommand("/battery", () => new InfiniteBatteryCommand());
+        RegisterCommand("/respawn", () => new RespawnCommand());
+        RegisterCommand("/kill", () => new KillCommand());
+
+        // Game Commands
+        RegisterCommand("/credits", () => new InfiniteCreditsCommand());
+        RegisterCommand("/deadline", () => new InfiniteDeadlineCommand());
+        RegisterCommand("/unlock", () => new UnlockAllDoorsCommand());
+        //RegisterCommand("/help", () => new HelpCommand());
+        //RegisterCommand("/terminal", () => new TerminalCommand()); // not quite working as expected
+
+        //Spawning Commands
+        RegisterCommand("/item", () => new ItemSpawnCommand());
+        RegisterCommand("/enemy", () => new EnemySpawnCommand());
+    }
+    public void RegisterCommand(string commandName, Func<ICommand> createCommand)
+    {
+        commandRegistry.Add(commandName, createCommand);
+        logger.LogInfo($"Registered Command: {commandName}");
     }
 
-    public ICommand GetCommand(string commandName)
+    public ICommand CreateCommand(string inputCommand)
     {
-        string command = commandName.Split(' ')[0];
-
-        return command switch
+        string command = inputCommand.Split(' ')[0];
+        if (commandRegistry.TryGetValue(command, out var createCommand))
         {
-            "/god" => _serviceProvider.GetService<GodModeCommand>(),
-            "/noclip" => _serviceProvider.GetService<NoClipCommand>(),
-            "/ammo" => _serviceProvider.GetService<InfiniteAmmoCommand>(),
-            "/vision" => _serviceProvider.GetService<NightVisionCommand>(),
-            "/sprint" => _serviceProvider.GetService<InfiniteSprintCommand>(),
-            "/speed" => _serviceProvider.GetService<SpeedHackCommand>(),
-            "/jumps" => _serviceProvider.GetService<InfiniteJumpCommand>(),
-            "/jump" => _serviceProvider.GetService<SuperJumpCommand>(),
-            "/teleport" => _serviceProvider.GetService<TeleportCommand>(),
-            "/battery" => _serviceProvider.GetService<InfiniteBatteryCommand>(),
-            //"/respawn" => _serviceProvider.GetService<RespawnCommand>(),
-            "/kill" => _serviceProvider.GetService<KillCommand>(),
-            "/credits" => _serviceProvider.GetService<InfiniteCreditsCommand>(),
-            "/deadline" => _serviceProvider.GetService<InfiniteDeadlineCommand>(),
-            "/unlock" => _serviceProvider.GetService<UnlockAllDoorsCommand>(),
-            //"/help" => _serviceProvider.GetService<HelpCommand>(),
-            //"/terminal" => _serviceProvider.GetService<TerminalCommand>(),
-            "/item" => _serviceProvider.GetService<ItemSpawnCommand>(),
-            "/enemy" => _serviceProvider.GetService<EnemySpawnCommand>(),
-            _ => throw new ArgumentException($"Invalid Command: {commandName}"),
-        };
+            return createCommand();
+        }
+        return null;
     }
 }

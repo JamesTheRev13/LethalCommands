@@ -20,7 +20,7 @@ public class HUDManagerPatches
         {
             try
             {
-                ICommand command = Plugin.Instance.commandFactory.GetCommand(text.ToLower());
+                ICommand command = Plugin.Instance.commandFactory.CreateCommand(text.ToLower());
                 if (command != null)
                 {
                     Plugin.Instance.logger.LogInfo($"Executing Command: {command?.CommandTitle}");

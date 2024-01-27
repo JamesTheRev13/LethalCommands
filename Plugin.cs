@@ -3,11 +3,9 @@ using BepInEx.Logging;
 using HarmonyLib;
 using LethalCommands.Commands;
 using LethalCommands.Patches;
-using LethalCommands.Extensions;
 using System.Collections.Generic;
 using Unity.Netcode;
 using UnityEngine;
-using Microsoft.Extensions.DependencyInjection;
 using System.Linq;
 using HarmonyLib.Public.Patching;
 
@@ -51,9 +49,7 @@ public class Plugin : BaseUnityPlugin
         logger = Logger;
         Instance = this;
 
-        var serviceCollection = new ServiceCollection();
-        serviceCollection.AddCommands();
-        commandFactory = new CommandFactory(serviceCollection.BuildServiceProvider());
+        commandFactory = new CommandFactory(Instance);
 
         logger.LogInfo($"Plugin {PluginInfo.PLUGIN_GUID} is loaded!");
         // There has to be a better way to do this lol
