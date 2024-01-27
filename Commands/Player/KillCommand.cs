@@ -7,7 +7,6 @@ public class KillCommand : CommandBase
     public KillCommand()
     {
         CommandTitle = "Kill";
-        ManualLogSource = Logger.CreateLogSource("KillCommand");
     }
 
     protected override bool ValidateParameters()

@@ -7,7 +7,6 @@ public class InfiniteSprintCommand : CommandBase
     public InfiniteSprintCommand()
     {
         CommandTitle = "Infinite Sprint";
-        ManualLogSource = Logger.CreateLogSource("InfiniteSprintCommand");
     }
 
     protected override bool ValidateParameters()
@@ -17,9 +16,9 @@ public class InfiniteSprintCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        Plugin.Instance.infiniteSprint = !Plugin.Instance.infiniteSprint;
-        CommandBody = "Infinite Sprint set to: " + Plugin.Instance.infiniteSprint.ToString();
-        ManualLogSource.LogInfo("Infinite Sprint toggled to " + Plugin.Instance.infiniteSprint.ToString());
+        Plugin.infiniteSprint = !Plugin.infiniteSprint;
+        CommandBody = "Infinite Sprint set to: " + Plugin.infiniteSprint.ToString();
+        ManualLogSource.LogInfo("Infinite Sprint toggled to " + Plugin.infiniteSprint.ToString());
     }
 }
 

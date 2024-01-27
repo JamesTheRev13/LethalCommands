@@ -34,7 +34,7 @@ public class CommandFactory
         RegisterCommand("/kill", () => new KillCommand());
 
         // Game Commands
-        RegisterCommand("/credits", () => new InfiniteCreditsCommand());
+        RegisterCommand("/credits", () => new InfiniteCreditsCommand(   ));
         RegisterCommand("/deadline", () => new InfiniteDeadlineCommand());
         RegisterCommand("/unlock", () => new UnlockAllDoorsCommand());
         //RegisterCommand("/help", () => new HelpCommand());

@@ -10,7 +10,6 @@ public class RespawnCommand : CommandBase
     public RespawnCommand()
     {
         CommandTitle = "Respawn";
-        ManualLogSource = Logger.CreateLogSource("RespawnCommand");
     }
 
     protected override bool ValidateParameters()

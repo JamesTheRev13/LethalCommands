@@ -7,7 +7,6 @@ public class SuperJumpCommand : CommandBase
     public SuperJumpCommand()
     {
         CommandTitle = "Super Jump";
-        ManualLogSource = Logger.CreateLogSource("SuperJumpCommand");
     }
 
     protected override bool ValidateParameters()
@@ -22,15 +21,15 @@ public class SuperJumpCommand : CommandBase
         if (parameters.Length == 2)
         {
             var force = float.Parse(parameters[1]);
-            Plugin.Instance.jumpForce = force;
-            CommandBody = "Jump Force set to: " + Plugin.Instance.jumpForce.ToString();
+            Plugin.jumpForce = force;
+            CommandBody = "Jump Force set to: " + Plugin.jumpForce.ToString();
         } else
         {
             // /jump - toggles superJump
-            Plugin.Instance.superJump = !Plugin.Instance.superJump;
+            Plugin.superJump = !Plugin.superJump;
             
-            CommandBody = "Super Jump set to: " + Plugin.Instance.superJump.ToString();
-            ManualLogSource.LogInfo("Super Jump toggled to " + Plugin.Instance.superJump.ToString());
+            CommandBody = "Super Jump set to: " + Plugin.superJump.ToString();
+            ManualLogSource.LogInfo("Super Jump toggled to " + Plugin.superJump.ToString());
         }
     }
 }

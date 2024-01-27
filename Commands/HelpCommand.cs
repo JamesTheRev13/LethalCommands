@@ -8,7 +8,6 @@ public class HelpCommand : CommandBase
     {
         CommandTitle = "Help";
         CommandBody = "Open Help Dialog";
-        ManualLogSource = Logger.CreateLogSource("HelpCommand");
     }
 
     protected override bool ValidateParameters()

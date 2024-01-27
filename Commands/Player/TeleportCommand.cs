@@ -9,7 +9,6 @@ public class TeleportCommand : CommandBase
     public TeleportCommand()
     {
         CommandTitle = $"Teleport {GameNetworkManager.Instance.localPlayerController.playerUsername}";
-        ManualLogSource = Logger.CreateLogSource("TeleportCommand");
     }
 
     protected override bool ValidateParameters()
@@ -30,28 +29,28 @@ public class TeleportCommand : CommandBase
             case "ship":
                 CommandBody = $"Teleport {localPlayer.playerUsername} to Ship";
                 ManualLogSource.LogInfo($"Current player position: {localPlayer.transform.position.ToString()}");
-                ManualLogSource.LogInfo($"Attempting to teleport {localPlayer.playerUsername} to position: {StartOfRound.Instance.playerSpawnPositions[0].transform.position.ToString()}");
+                ManualLogSource.LogInfo($"Attempting to teleport {localPlayer.playerUsername} to position: {StartOfRound.Instance.playerSpawnPositions[0].transform.position}");
                 localPlayer.TeleportPlayer(StartOfRound.Instance.playerSpawnPositions[0].transform.position, false);
                 return;
             case "inside":
                 CommandBody = $"Teleport {localPlayer.playerUsername} to Indoor Entrance";
                 ManualLogSource.LogInfo($"Current player position: {localPlayer.transform.position.ToString()}");
-                ManualLogSource.LogInfo($"Attempting to teleport {localPlayer.playerUsername} to position: {Plugin.Instance.GetEntrance().ToString()}");
+                ManualLogSource.LogInfo($"Attempting to teleport {localPlayer.playerUsername} to position: {Plugin.GetEntrance()}");
 
-                localPlayer.TeleportPlayer(Plugin.Instance.GetEntrance(), false);
+                localPlayer.TeleportPlayer(Plugin.GetEntrance(), false);
                 return;
             case "outside":
                 CommandBody = $"Teleport {localPlayer.playerUsername} to Outdoor Entrance";
                 ManualLogSource.LogInfo($"Current player position: {localPlayer.transform.position.ToString()}");
-                ManualLogSource.LogInfo($"Attempting to teleport {localPlayer.playerUsername} to position: {Plugin.Instance.GetEntrance(true).ToString()}");
+                ManualLogSource.LogInfo($"Attempting to teleport {localPlayer.playerUsername} to position: {Plugin.GetEntrance(true)}");
 
-                localPlayer.TeleportPlayer(Plugin.Instance.GetEntrance(true), false);
+                localPlayer.TeleportPlayer(Plugin.GetEntrance(true), false);
                 return;
             default:
                 if (matchedPlayer != null)
                 {
                     ManualLogSource.LogInfo($"Current player position: {localPlayer.transform.position.ToString()}");
-                    ManualLogSource.LogInfo($"Attempting to teleport {localPlayer.playerUsername} to {matchedPlayer.playerUsername} at position: {matchedPlayer.transform.position.ToString()}");
+                    ManualLogSource.LogInfo($"Attempting to teleport {localPlayer.playerUsername} to {matchedPlayer.playerUsername} at position: {matchedPlayer.transform.position}");
                     localPlayer.TeleportPlayer(matchedPlayer.transform.position, false);
                     return;
                 }

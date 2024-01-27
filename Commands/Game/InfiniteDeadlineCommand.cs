@@ -8,7 +8,6 @@ public class InfiniteDeadlineCommand : CommandBase
     {
         IsHostCommand = true;
         CommandTitle = "Infinite Deadline";
-        ManualLogSource = Logger.CreateLogSource("InfiniteDeadlineCommand");
     }
 
     protected override bool ValidateParameters()
@@ -18,10 +17,10 @@ public class InfiniteDeadlineCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        Plugin.Instance.infiniteDeadline = !Plugin.Instance.infiniteDeadline;
-        CommandBody = "Infinite Deadline set to: " + Plugin.Instance.infiniteDeadline.ToString();
+        Plugin.infiniteDeadline = !Plugin.infiniteDeadline;
+        CommandBody = "Infinite Deadline set to: " + Plugin.infiniteDeadline.ToString();
 
-        ManualLogSource.LogInfo("Infinite Deadline toggled to " + Plugin.Instance.infiniteDeadline.ToString());
+        ManualLogSource.LogInfo("Infinite Deadline toggled to " + Plugin.infiniteDeadline.ToString());
     }    
 }
 

@@ -7,7 +7,6 @@ public class InfiniteAmmoCommand : CommandBase
     public InfiniteAmmoCommand()
     {
         CommandTitle = "Infinite Ammo";
-        ManualLogSource = Logger.CreateLogSource("InfiniteAmmoCommand");
     }
 
     protected override bool ValidateParameters()
@@ -17,10 +16,10 @@ public class InfiniteAmmoCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        Plugin.Instance.infiniteAmmo = !Plugin. Instance.infiniteAmmo;
+        Plugin.infiniteAmmo = !Plugin.infiniteAmmo;
 
-        CommandBody = "Infinite Ammo set to: " + Plugin.Instance.infiniteAmmo.ToString();
-        ManualLogSource.LogInfo("Infinite Ammo toggled to " + Plugin.Instance.infiniteAmmo.ToString());
+        CommandBody = "Infinite Ammo set to: " + Plugin.infiniteAmmo.ToString();
+        ManualLogSource.LogInfo("Infinite Ammo toggled to " + Plugin.infiniteAmmo.ToString());
     }
 }
 

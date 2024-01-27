@@ -12,7 +12,6 @@ public class EnemySpawnCommand : CommandBase
     {
         IsHostCommand = true;
         CommandTitle = "Enemy Spawn";
-        ManualLogSource = BepInEx.Logging.Logger.CreateLogSource("EnemySpawnCommand");
     }
 
     protected override bool ValidateParameters()

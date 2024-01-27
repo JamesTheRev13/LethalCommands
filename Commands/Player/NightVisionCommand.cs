@@ -7,7 +7,6 @@ public class NightVisionCommand : CommandBase
     public NightVisionCommand()
     {
         CommandTitle = "Night Vision";
-        ManualLogSource = Logger.CreateLogSource("NightVisionCommand");
     }
 
     protected override bool ValidateParameters()
@@ -18,10 +17,10 @@ public class NightVisionCommand : CommandBase
     protected override void ExecuteCommand()
     {
         // TODO: Add support to customize night vision (color, range, intensity, etc..)
-        Plugin. Instance.nightVision = !Plugin.Instance.nightVision;
+        Plugin.nightVision = !Plugin.nightVision;
 
-        CommandBody = "Night Vision set to: " + Plugin.Instance.nightVision.ToString();
-        ManualLogSource.LogInfo("Night Vision toggled to " + Plugin.Instance.nightVision.ToString());
+        CommandBody = "Night Vision set to: " + Plugin.nightVision.ToString();
+        ManualLogSource.LogInfo("Night Vision toggled to " + Plugin.nightVision.ToString());
     }
 }
 

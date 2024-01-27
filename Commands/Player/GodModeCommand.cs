@@ -7,7 +7,6 @@ public class GodModeCommand : CommandBase
     public GodModeCommand()
     {
         CommandTitle = "God Mode";
-        ManualLogSource = Plugin.Instance.logger;
     }
 
     protected override bool ValidateParameters()
@@ -17,10 +16,10 @@ public class GodModeCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        Plugin.Instance.godMode = !Plugin.Instance.godMode;
+        Plugin.godMode = !Plugin.godMode;
 
-        CommandBody = $"God Mode set to: {Plugin.Instance.godMode}";
-        ManualLogSource.LogInfo($"God mode toggled to {Plugin.Instance.godMode}");
+        CommandBody = $"God Mode set to: {Plugin.godMode}";
+        ManualLogSource.LogInfo($"God mode toggled to {Plugin.godMode}");
     }
 }
 

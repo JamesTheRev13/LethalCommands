@@ -88,7 +88,7 @@ public class ItemSpawnCommand : CommandBase
                 // setting a random scrap value for now, maybe make this configurable?
                 itemObj.GetComponent<GrabbableObject>().SetScrapValue(scrapValue);
                 if (parameters[1].ToLower().Contains("shotgun"))
-                    itemObj.GetComponent<ShotgunItem>().shellsLoaded = Plugin.Instance.infiniteAmmo ? 2147483647 : 2;
+                    itemObj.GetComponent<ShotgunItem>().shellsLoaded = Plugin.infiniteAmmo ? 2147483647 : 2;
                 itemObj.GetComponent<NetworkObject>().Spawn();
                 ManualLogSource.LogInfo($"Attempted to spawn {parameters[1]}!");
             }

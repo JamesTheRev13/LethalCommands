@@ -8,7 +8,6 @@ public class SpeedHackCommand : CommandBase
     public SpeedHackCommand()
     {
         CommandTitle = "SpeedHack";
-        ManualLogSource = Logger.CreateLogSource("SpeedHackCommand");
     }
 
     protected override bool ValidateParameters()
@@ -22,15 +21,15 @@ public class SpeedHackCommand : CommandBase
         if (parameters.Length == 2)
         {
             var speed = float.Parse(parameters[1]);
-            Plugin.Instance.movementSpeed = speed;
-            CommandBody = "Movement Speed set to: " + Plugin.Instance.movementSpeed.ToString();
+            Plugin.movementSpeed = speed;
+            CommandBody = "Movement Speed set to: " + Plugin.movementSpeed.ToString();
         } else
         {
             // /speed - toggles speedHack
-            Plugin.Instance.speedHack = !Plugin.Instance.speedHack;
+            Plugin.speedHack = !Plugin.speedHack;
             
-            CommandBody = "SpeedHack set to: " + Plugin.Instance.speedHack.ToString();
-            ManualLogSource.LogInfo("SpeedHack toggled to " + Plugin.Instance.speedHack.ToString());
+            CommandBody = "SpeedHack set to: " + Plugin.speedHack.ToString();
+            ManualLogSource.LogInfo("SpeedHack toggled to " + Plugin.speedHack.ToString());
         }
     }
 }

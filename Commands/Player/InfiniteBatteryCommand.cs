@@ -7,7 +7,6 @@ public class InfiniteBatteryCommand : CommandBase
     public InfiniteBatteryCommand()
     {
         CommandTitle = "Infinite Battery";
-        ManualLogSource = Logger.CreateLogSource("InfiniteBatteryCommand");
     }
 
     protected override bool ValidateParameters()
@@ -17,10 +16,10 @@ public class InfiniteBatteryCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        Plugin.Instance.infiniteBattery = !Plugin.Instance.infiniteBattery;
+        Plugin.infiniteBattery = !Plugin.infiniteBattery;
 
-        CommandBody = "Infinite Battery set to: " + Plugin.Instance.infiniteBattery.ToString();
-        ManualLogSource.LogInfo("Infinite Battery toggled to " + Plugin.Instance.infiniteBattery.ToString());
+        CommandBody = "Infinite Battery set to: " + Plugin.infiniteBattery.ToString();
+        ManualLogSource.LogInfo("Infinite Battery toggled to " + Plugin.infiniteBattery.ToString());
         
     }
 }

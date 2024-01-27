@@ -8,6 +8,7 @@ public abstract class CommandBase : ICommand
     protected string[] parameters;
 
     protected ManualLogSource ManualLogSource;
+    protected Plugin Plugin;
 
     public string CommandTitle { get; protected set; } = string.Empty;
     public string CommandBody { get; protected set; } = string.Empty;
@@ -15,19 +16,22 @@ public abstract class CommandBase : ICommand
 
     public CommandBase()
     {
-        ManualLogSource = Plugin.Instance.logger;
+        Plugin = Plugin.Instance;
+        ManualLogSource = Plugin.logger;
     }
 
     public virtual void SetParameters(string inputCommand)
     {
+        ManualLogSource.LogInfo("Entered SetParameters() method");
+        parameters = inputCommand.Split(' ');
+        ManualLogSource.LogInfo($"Valid Params? {ValidateParameters()}");
         if (!ValidateParameters())
         {
-            Plugin.Instance.logger.LogError("Invalid parameters for command: " + GetType().Name);
+            ManualLogSource.LogError("Invalid parameters for command: " + GetType().Name);
             throw new ArgumentException("Invalid parameters : " + GetCommand());
         }
 
-        parameters = inputCommand.Split(' ');
-        Plugin.Instance.logger.LogInfo("Parameters set for command: " + parameters);
+        ManualLogSource.LogInfo("Parameters set for command: " + GetCommand());
     }
     
     public virtual string GetCommand()
@@ -39,16 +43,16 @@ public abstract class CommandBase : ICommand
 
     public void Execute()
     {
-        Plugin.Instance.logger.LogInfo("Entered Execute() method");
+        ManualLogSource.LogInfo("Entered Execute() method");
 
         if (IsHostCommand && !GameNetworkManager.Instance.localPlayerController.IsHost)
         {
             throw new InvalidOperationException("You must be the host to run this command.");
         }
         
-        Plugin.Instance.currentCommandIndex = -1;
-        Plugin.Instance.commandHistory.Insert(0, GetCommand());
-        Plugin.Instance.logger.LogInfo($"Added Command to Command History: {GetCommand()}");
+        Plugin.currentCommandIndex = -1;
+        Plugin.commandHistory.Insert(0, GetCommand());
+        ManualLogSource.LogInfo($"Added Command to Command History: {GetCommand()}");
         ExecuteCommand();
     }
 

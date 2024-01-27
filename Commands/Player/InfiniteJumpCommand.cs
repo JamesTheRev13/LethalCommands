@@ -8,7 +8,6 @@ public class InfiniteJumpCommand : CommandBase
     public InfiniteJumpCommand()
     {
         CommandTitle = "Infinite Jump";
-        ManualLogSource = Logger.CreateLogSource("InfiniteJumpCommand");
     }
 
     protected override bool ValidateParameters()
@@ -18,9 +17,9 @@ public class InfiniteJumpCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        Plugin.Instance.infiniteJump = !Plugin.Instance.infiniteJump;
-        CommandBody = "Infinite Jump set to: " + Plugin.Instance.infiniteJump.ToString();
-        ManualLogSource.LogInfo("Infinite Jump toggled to " + Plugin.Instance.infiniteJump.ToString());
+        Plugin.infiniteJump = !Plugin.infiniteJump;
+        CommandBody = "Infinite Jump set to: " + Plugin.infiniteJump.ToString();
+        ManualLogSource.LogInfo("Infinite Jump toggled to " + Plugin.infiniteJump.ToString());
         
     }
 }

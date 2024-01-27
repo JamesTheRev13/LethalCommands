@@ -11,7 +11,6 @@ public class UnlockAllDoorsCommand : CommandBase
     {
         CommandTitle = "Doors";
         CommandBody = "Unlocked All Doors";
-        ManualLogSource = Logger.CreateLogSource("UnlockAllDoorsCommand");
     }
 
     protected override bool ValidateParameters()

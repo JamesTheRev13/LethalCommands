@@ -8,7 +8,6 @@ public class TerminalCommand : CommandBase
     {
         CommandTitle = "Terminal";
         CommandBody = "Portable Terminal";
-        ManualLogSource = Logger.CreateLogSource("TerminalCommand");
     }
 
     protected override bool ValidateParameters()

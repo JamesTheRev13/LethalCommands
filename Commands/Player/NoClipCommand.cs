@@ -7,7 +7,6 @@ public class NoClipCommand : CommandBase
     public NoClipCommand()
     {
         CommandTitle = "NoClip";
-        ManualLogSource = Logger.CreateLogSource("NoClipCommand");
     }
 
     protected override bool ValidateParameters()
@@ -22,16 +21,16 @@ public class NoClipCommand : CommandBase
         if (parameters.Length == 2)
         {
             var speed = float.Parse(parameters[1]);
-            Plugin.Instance.noclipSpeed = speed;
-            CommandBody = "NoClip speed set to: " + Plugin.Instance.noclipSpeed.ToString();
+            Plugin.noclipSpeed = speed;
+            CommandBody = "NoClip speed set to: " + Plugin.noclipSpeed.ToString();
         }
         else
         {
             // /noclip - toggles noclip
-            Plugin.Instance.noclip = !Plugin.Instance.noclip;
+            Plugin.noclip = !Plugin.noclip;
 
-            CommandBody = "NoClip set to: " + Plugin.Instance.noclip.ToString();
-            ManualLogSource.LogInfo("NoClip toggled to " + Plugin.Instance.noclip.ToString());
+            CommandBody = "NoClip set to: " + Plugin.noclip.ToString();
+            ManualLogSource.LogInfo("NoClip toggled to " + Plugin.noclip.ToString());
         }
     }
 }
