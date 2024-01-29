@@ -1,7 +1,6 @@
 ﻿using BepInEx;
 using GameNetcodeStuff;
 using HarmonyLib;
-using LethalCommands.Commands;
 using LethalCommands.Enumerators;
 using UnityEngine;
 
@@ -144,7 +143,6 @@ public class PlayerControllerBPatches
         else
         {
             collider.enabled = true;
-
         }
     }
     #endregion

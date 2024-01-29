@@ -49,7 +49,8 @@ public abstract class CommandBase : ICommand
         {
             throw new InvalidOperationException("You must be the host to run this command.");
         }
-        
+        // TODO: remove command from history if it fails to execute
+        // TODO: remove command from history if it already exists in history
         Plugin.currentCommandIndex = -1;
         Plugin.commandHistory.Insert(0, GetCommand());
         ManualLogSource.LogInfo($"Added Command to Command History: {GetCommand()}");
