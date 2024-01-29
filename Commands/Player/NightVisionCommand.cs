@@ -1,14 +1,12 @@
 ﻿using BepInEx.Logging;
-using System;
 
 namespace LethalCommands.Commands.Player;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class NightVisionCommand : CommandBase
 {
-    
-    public NightVisionCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
+    public NightVisionCommand()
     {
-
+        CommandTitle = "Night Vision";
     }
 
     protected override bool ValidateParameters()
@@ -19,18 +17,10 @@ public class NightVisionCommand : CommandBase
     protected override void ExecuteCommand()
     {
         // TODO: Add support to customize night vision (color, range, intensity, etc..)
-        plugin.nightVision = !plugin.nightVision;
+        Plugin.nightVision = !Plugin.nightVision;
 
-        CommandTitle = "Night Vision";
-        CommandBody = "Night Vision set to: " + plugin.nightVision.ToString();
-        logger.LogInfo("Night Vision toggled to " + plugin.nightVision.ToString());
-    }
-
-    protected override void HandleExecuteError(Exception ex)
-    {
-        base.HandleExecuteError(ex);
-        CommandTitle = "Night Vision Error";
-        CommandBody = $"Error setting Night Vision";
+        CommandBody = "Night Vision set to: " + Plugin.nightVision.ToString();
+        ManualLogSource.LogInfo("Night Vision toggled to " + Plugin.nightVision.ToString());
     }
 }
 

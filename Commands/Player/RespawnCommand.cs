@@ -7,10 +7,9 @@ namespace LethalCommands.Commands.Player;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class RespawnCommand : CommandBase
 {
-    
-    public RespawnCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
+    public RespawnCommand()
     {
-
+        CommandTitle = "Respawn";
     }
 
     protected override bool ValidateParameters()
@@ -21,11 +20,10 @@ public class RespawnCommand : CommandBase
     protected override void ExecuteCommand()
     {
         // Not working as intended- spawns player back, but other players can't see respawned player
-        CommandTitle = "Respawn";
         var player = GameNetworkManager.Instance.localPlayerController;
-        logger.LogInfo($"player: {player.playerUsername}");
+        ManualLogSource.LogInfo($"player: {player.playerUsername}");
         var playerIndex = StartOfRound.Instance.allPlayerScripts.ToList().IndexOf(player);
-        logger.LogInfo($"playerIndex: {playerIndex}");
+        ManualLogSource.LogInfo($"playerIndex: {playerIndex}");
         var spectatedPlayer = player.spectatedPlayerScript ?? null;
 
         if (player.isPlayerDead)
@@ -194,14 +192,7 @@ public class RespawnCommand : CommandBase
             return;
         }
         CommandBody = $"{player.playerUsername} is not dead.";
-        logger.LogInfo($"Failed to respawn {player.playerUsername} - player not dead");
-    }
-
-    protected override void HandleExecuteError(Exception ex)
-    {
-        base.HandleExecuteError(ex);
-        CommandTitle = "RespawnError Error";
-        CommandBody = $"Error Respawning Player";
+        ManualLogSource.LogInfo($"Failed to respawn {player.playerUsername} - player not dead");
     }
 }
 

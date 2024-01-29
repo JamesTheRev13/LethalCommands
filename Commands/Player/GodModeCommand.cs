@@ -1,39 +1,25 @@
 ﻿using BepInEx.Logging;
-using System;
 
 namespace LethalCommands.Commands.Player;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class GodModeCommand : CommandBase
 {
-    //bool godMode;
-
-    
-    public GodModeCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
+    public GodModeCommand()
     {
-        //godMode = plugin.godMode;
+        CommandTitle = "God Mode";
     }
 
     protected override bool ValidateParameters()
     {
-        // No parameters needed for this command
-        // /god would be 'param 1', anything afterwards is an illegal 'param2' etc...
         return parameters.Length == 1;
     }
 
     protected override void ExecuteCommand()
     {
-        plugin.godMode = !plugin.godMode;
-        CommandTitle = "God Mode";
-        CommandBody = "God Mode set to: " + plugin.godMode.ToString();
-        logger.LogInfo("God mode toggled to " + plugin.godMode.ToString());
-        
-    }
+        Plugin.godMode = !Plugin.godMode;
 
-    protected override void HandleExecuteError(Exception ex)
-    {
-        base.HandleExecuteError(ex);
-        CommandTitle = "God Mode Error";
-        CommandBody = "Error toggling God Mode";
+        CommandBody = $"God Mode set to: {Plugin.godMode}";
+        ManualLogSource.LogInfo($"God mode toggled to {Plugin.godMode}");
     }
 }
 

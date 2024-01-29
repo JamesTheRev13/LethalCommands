@@ -1,5 +1,4 @@
 ﻿using BepInEx.Logging;
-using System;
 using System.Collections.Generic;
 using System.Linq;
 
@@ -8,40 +7,31 @@ namespace LethalCommands.Commands.Game;
 public class UnlockAllDoorsCommand : CommandBase
 {
     
-    public UnlockAllDoorsCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
+    public UnlockAllDoorsCommand()
     {
-
+        CommandTitle = "Doors";
+        CommandBody = "Unlocked All Doors";
     }
 
     protected override bool ValidateParameters()
     {
-        // No parameters needed for this command
         return parameters.Length == 1;
     }
 
     protected override void ExecuteCommand()
     {
-        CommandTitle = "Doors";
-        CommandBody = "Unlocked All Doors";
-        logger.LogInfo("Attempting to unlock all doors...");
+        ManualLogSource.LogInfo("Attempting to unlock all doors...");
         List<DoorLock> doorLocks = UnityEngine.Object.FindObjectsOfType<DoorLock>().ToList();
 
         foreach (DoorLock door in doorLocks)
         {
-            plugin.logger.LogInfo("Found Door (" + door.GetInstanceID() + ") Locked? -> " + door.isLocked.ToString());
+            ManualLogSource.LogInfo("Found Door (" + door.GetInstanceID() + ") Locked? -> " + door.isLocked.ToString());
             if (door.isLocked)
             {
                 door.UnlockDoorSyncWithServer();
-                plugin.logger.LogInfo("Unlocked Door (" + door?.GetInstanceID() + ") -> " + door?.isLocked.ToString());
+                ManualLogSource.LogInfo("Unlocked Door (" + door?.GetInstanceID() + ") -> " + door?.isLocked.ToString());
             }
         }
-    }
-
-    protected override void HandleExecuteError(Exception ex)
-    {
-        base.HandleExecuteError(ex);
-        CommandTitle = "Doors Error";
-        CommandBody = "Error(s) Unlocking Doors";
     }
 }
 

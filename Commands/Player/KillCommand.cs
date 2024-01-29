@@ -1,14 +1,12 @@
 ﻿using BepInEx.Logging;
-using System;
 
 namespace LethalCommands.Commands.Player;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class KillCommand : CommandBase
 {
-    
-    public KillCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
+    public KillCommand()
     {
-
+        CommandTitle = "Kill";
     }
 
     protected override bool ValidateParameters()
@@ -19,17 +17,9 @@ public class KillCommand : CommandBase
     protected override void ExecuteCommand()
     {
         var player = GameNetworkManager.Instance.localPlayerController;
-        CommandTitle = "Kill";
         CommandBody = $"Killed {player.playerUsername}.";
         player.KillPlayer(player.transform.position, true);
-        logger.LogInfo($"Killed {player.playerUsername}");
-    }
-
-    protected override void HandleExecuteError(Exception ex)
-    {
-        base.HandleExecuteError(ex);
-        CommandTitle = "KillError Error";
-        CommandBody = $"Error Killing Player";
+        ManualLogSource.LogInfo($"Killed {player.playerUsername}");
     }
 }
 

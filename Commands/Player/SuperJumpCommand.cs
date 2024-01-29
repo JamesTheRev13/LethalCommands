@@ -1,14 +1,12 @@
 ﻿using BepInEx.Logging;
-using System;
 
 namespace LethalCommands.Commands.Player;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class SuperJumpCommand : CommandBase
 {
-    
-    public SuperJumpCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
+    public SuperJumpCommand()
     {
-
+        CommandTitle = "Super Jump";
     }
 
     protected override bool ValidateParameters()
@@ -18,29 +16,21 @@ public class SuperJumpCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        CommandTitle = "Super Jump";
 
         // /jump <force> - sets the jump force while superJump is enabled
         if (parameters.Length == 2)
         {
             var force = float.Parse(parameters[1]);
-            plugin.jumpForce = force;
-            CommandBody = "Jump Force set to: " + plugin.jumpForce.ToString();
+            Plugin.jumpForce = force;
+            CommandBody = "Jump Force set to: " + Plugin.jumpForce.ToString();
         } else
         {
             // /jump - toggles superJump
-            plugin.superJump = !plugin.superJump;
+            Plugin.superJump = !Plugin.superJump;
             
-            CommandBody = "Super Jump set to: " + plugin.superJump.ToString();
-            logger.LogInfo("Super Jump toggled to " + plugin.superJump.ToString());
+            CommandBody = "Super Jump set to: " + Plugin.superJump.ToString();
+            ManualLogSource.LogInfo("Super Jump toggled to " + Plugin.superJump.ToString());
         }
-    }
-
-    protected override void HandleExecuteError(Exception ex)
-    {
-        base.HandleExecuteError(ex);
-        CommandTitle = "Super Jump Error";
-        CommandBody = $"Error setting Super Jump";
     }
 }
 

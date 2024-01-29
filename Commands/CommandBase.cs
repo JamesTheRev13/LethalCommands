@@ -1,40 +1,37 @@
 ﻿using BepInEx.Logging;
 using System;
-// Command Pattern
+
 namespace LethalCommands.Commands;
 
 public abstract class CommandBase : ICommand
 {
     protected string[] parameters;
-    protected ManualLogSource logger;
-    protected Plugin plugin;
+
+    protected ManualLogSource ManualLogSource;
+    protected Plugin Plugin;
 
     public string CommandTitle { get; protected set; } = string.Empty;
     public string CommandBody { get; protected set; } = string.Empty;
     public bool IsHostCommand { get; protected set; } = false;
 
-
-    public CommandBase(Plugin plugin, ManualLogSource logger)
+    public CommandBase()
     {
-        this.logger = logger;
-        this.plugin = plugin;
+        Plugin = Plugin.Instance;
+        ManualLogSource = Plugin.logger;
     }
 
     public virtual void SetParameters(string inputCommand)
     {
-        try
+        ManualLogSource.LogInfo("Entered SetParameters() method");
+        parameters = inputCommand.Split(' ');
+        ManualLogSource.LogInfo($"Valid Params? {ValidateParameters()}");
+        if (!ValidateParameters())
         {
-            parameters = inputCommand.Split(' ');
+            ManualLogSource.LogError("Invalid parameters for command: " + GetType().Name);
+            throw new ArgumentException("Invalid parameters : " + GetCommand());
+        }
 
-            if (!ValidateParameters())
-            {
-                HandleInvalidParameters();
-            }
-        }
-        catch (Exception ex)
-        {
-            HandleUnexpectedError(ex);
-        }
+        ManualLogSource.LogInfo("Parameters set for command: " + GetCommand());
     }
     
     public virtual string GetCommand()
@@ -44,53 +41,22 @@ public abstract class CommandBase : ICommand
 
     protected abstract bool ValidateParameters();
 
-    protected virtual void HandleInvalidParameters()
-    {
-        logger.LogError("Invalid parameters for command: " + GetType().Name);
-    }
-
-    protected virtual void HandleUnexpectedError(Exception ex)
-    {
-        logger.LogError("Unexpected error in command: " + GetType().Name + "\n" + ex.Message);
-    }
-
     public void Execute()
     {
-        try
+        ManualLogSource.LogInfo("Entered Execute() method");
+
+        if (IsHostCommand && !GameNetworkManager.Instance.localPlayerController.IsHost)
         {
-            // Check if host command and host status before running
-            if (IsHostCommand && !GameNetworkManager.Instance.localPlayerController.IsHost)
-            {
-                CommandTitle = "Not Allowed";
-                CommandBody = "Must be host";
-            } else { 
-                plugin.currentCommandIndex = -1;
-                plugin.commandHistory.Insert(0, GetCommand());
-                plugin.logger.LogInfo($"Added Command to Command History: {GetCommand()}");
-                ExecuteCommand(); // Call the specific logic in the derived class
-            }
-            DisplayCommandLog();
+            throw new InvalidOperationException("You must be the host to run this command.");
         }
-        catch (Exception ex)
-        {
-            HandleExecuteError(ex);
-        }
+        // TODO: remove command from history if it fails to execute
+        // TODO: remove command from history if it already exists in history
+        Plugin.currentCommandIndex = -1;
+        Plugin.commandHistory.Insert(0, GetCommand());
+        ManualLogSource.LogInfo($"Added Command to Command History: {GetCommand()}");
+        ExecuteCommand();
     }
 
     protected abstract void ExecuteCommand();
-
-    protected virtual void DisplayCommandLog()
-    {
-        HUDManager.Instance.DisplayTip(CommandTitle, CommandBody);
-        HUDManager.Instance.chatTextField.text = "";
-    }
-
-    protected virtual void HandleExecuteError(Exception ex)
-    {
-        CommandTitle = "Error";
-        CommandBody = "Unknown Command";
-        logger.LogError("Unexpected error in command execution: " + GetType().Name + "\n" + ex.Message);
-        DisplayCommandLog();
-    }
 }
 

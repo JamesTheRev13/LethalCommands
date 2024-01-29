@@ -1,14 +1,12 @@
 ﻿using BepInEx.Logging;
-using System;
 
 namespace LethalCommands.Commands.Player;
 // Command Pattern - https://refactoring.guru/design-patterns/command
 public class InfiniteBatteryCommand : CommandBase
 {
-    
-    public InfiniteBatteryCommand(Plugin _plugin, ManualLogSource _logger) : base(_plugin, _logger)
+    public InfiniteBatteryCommand()
     {
-
+        CommandTitle = "Infinite Battery";
     }
 
     protected override bool ValidateParameters()
@@ -18,19 +16,11 @@ public class InfiniteBatteryCommand : CommandBase
 
     protected override void ExecuteCommand()
     {
-        plugin.infiniteBattery = !plugin.infiniteBattery;
+        Plugin.infiniteBattery = !Plugin.infiniteBattery;
 
-        CommandTitle = "Infinite Battery";      
-        CommandBody = "Infinite Battery set to: " + plugin.infiniteBattery.ToString();
-        logger.LogInfo("Infinite Battery toggled to " + plugin.infiniteBattery.ToString());
+        CommandBody = "Infinite Battery set to: " + Plugin.infiniteBattery.ToString();
+        ManualLogSource.LogInfo("Infinite Battery toggled to " + Plugin.infiniteBattery.ToString());
         
-    }
-
-    protected override void HandleExecuteError(Exception ex)
-    {
-        base.HandleExecuteError(ex);
-        CommandTitle = "Infinite Battery Error";
-        CommandBody = $"Error setting Infinite Battery";
     }
 }
 
